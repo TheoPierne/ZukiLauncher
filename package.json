@@ -5,9 +5,9 @@
   "description": "Modded Minecraft Launcher",
   "author": "Wouhait (https://github.com/TheoPierne/)",
   "license": "UNLICENSED",
-  "homepage": "https://github.com/TheoPierne/HeliosLauncher",
+  "homepage": "https://github.com/TheoPierne/MythicalLauncher",
   "bugs": {
-    "url": "https://github.com/TheoPierne/HeliosLauncher/issues"
+    "url": "https://github.com/TheoPierne/MythicalLauncher/issues"
   },
   "private": true,
   "main": "index.js",
@@ -49,6 +49,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TheoPierne/HeliosLauncher.git"
+    "url": "git+https://github.com/TheoPierne/MythicalLauncher.git"
   }
 }
