@@ -1,13 +1,13 @@
 {
   "name": "mythicallauncher",
-  "version": "1.9.0",
+  "version": "1.0.0",
   "productName": "Mythical Launcher",
   "description": "Modded Minecraft Launcher",
-  "author": "Daniel Scalzi (https://github.com/dscalzi/)",
+  "author": "Wouhait (https://github.com/TheoPierne/)",
   "license": "UNLICENSED",
-  "homepage": "https://github.com/dscalzi/HeliosLauncher",
+  "homepage": "https://github.com/TheoPierne/HeliosLauncher",
   "bugs": {
-    "url": "https://github.com/dscalzi/HeliosLauncher/issues"
+    "url": "https://github.com/TheoPierne/HeliosLauncher/issues"
   },
   "private": true,
   "main": "index.js",
@@ -35,19 +35,20 @@
     "got": "^11.8.3",
     "helios-core": "~0.1.0",
     "jquery": "^3.6.0",
+    "minecraft-protocol": "^1.32.1",
     "node-stream-zip": "^1.15.0",
     "request": "^2.88.2",
-    "semver": "^7.3.5",
+    "semver": "^7.3.6",
     "tar-fs": "^2.1.1",
     "winreg": "^1.2.4"
   },
   "devDependencies": {
-    "electron": "^18.0.1",
+    "electron": "^18.0.3",
     "electron-builder": "^22.14.13",
     "eslint": "^8.12.0"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dscalzi/HeliosLauncher.git"
+    "url": "git+https://github.com/TheoPierne/HeliosLauncher.git"
   }
 }
