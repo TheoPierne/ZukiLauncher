@@ -1768,6 +1768,8 @@ class AssetGuard extends EventEmitter {
                     } else {
                         self.emit('complete', 'download')
                     }
+                } else {
+                    return this.startAsyncProcess(identifier, limit);
                 }
 
             })
@@ -1840,7 +1842,7 @@ class AssetGuard extends EventEmitter {
             await this.validateMiscellaneous(versionData)
             this.emit('validate', 'files')
             await this.processDlQueues()
-            //this.emit('complete', 'download')
+            // this.emit('complete', 'download')
             const forgeData = await this.loadForgeData(server)
         
             return {
