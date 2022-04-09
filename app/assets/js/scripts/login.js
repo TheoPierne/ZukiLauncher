@@ -1,22 +1,23 @@
 /**
- * Script for login.ejs
- */
+* Script for login.ejs
+*/
 // Validation Regexes.
 const validUsername         = /^[a-zA-Z0-9_]{1,16}$/
 const basicEmail            = /^\S+@\S+\.\S+$/
 //const validEmail          = /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i
 
 // Login Elements
-const loginCancelContainer  = document.getElementById('loginCancelContainer')
-const loginCancelButton     = document.getElementById('loginCancelButton')
-const loginEmailError       = document.getElementById('loginEmailError')
-const loginUsername         = document.getElementById('loginUsername')
-const loginPasswordError    = document.getElementById('loginPasswordError')
-const loginPassword         = document.getElementById('loginPassword')
-const checkmarkContainer    = document.getElementById('checkmarkContainer')
-const loginRememberOption   = document.getElementById('loginRememberOption')
-const loginButton           = document.getElementById('loginButton')
-const loginForm             = document.getElementById('loginForm')
+const loginCancelContainer = document.getElementById('loginCancelContainer')
+const loginCancelButton = document.getElementById('loginCancelButton')
+const loginEmailError = document.getElementById('loginEmailError')
+const loginUsername = document.getElementById('loginUsername')
+const loginPasswordError = document.getElementById('loginPasswordError')
+const loginPassword = document.getElementById('loginPassword')
+const loginFieldPasswordContainer = document.getElementById('loginFieldPasswordContainer')
+const checkmarkContainer = document.getElementById('checkmarkContainer')
+const loginRememberOption = document.getElementById('loginRememberOption')
+const loginButton = document.getElementById('loginButton')
+const loginForm = document.getElementById('loginForm')
 
 // Control variables.
 let lu = false, lp = false
@@ -25,21 +26,21 @@ const loggerLogin = LoggerUtil1('%c[Login]', 'color: #000668; font-weight: bold'
 
 
 /**
- * Show a login error.
- * 
- * @param {HTMLElement} element The element on which to display the error.
- * @param {string} value The error text.
- */
+* Show a login error.
+* 
+* @param {HTMLElement} element The element on which to display the error.
+* @param {string} value The error text.
+*/
 function showError(element, value){
     element.innerHTML = value
     element.style.opacity = 1
 }
 
 /**
- * Shake a login error to add emphasis.
- * 
- * @param {HTMLElement} element The element to shake.
- */
+* Shake a login error to add emphasis.
+* 
+* @param {HTMLElement} element The element to shake.
+*/
 function shakeError(element){
     if(element.style.opacity == 1){
         element.classList.remove('shake')
@@ -49,10 +50,10 @@ function shakeError(element){
 }
 
 /**
- * Validate that an email field is neither empty nor invalid.
- * 
- * @param {string} value The email value.
- */
+* Validate that an email field is neither empty nor invalid.
+* 
+* @param {string} value The email value.
+*/
 function validateEmail(value){
     if(value){
         if(!basicEmail.test(value) && !validUsername.test(value)){
@@ -74,10 +75,10 @@ function validateEmail(value){
 }
 
 /**
- * Validate that the password field is not empty.
- * 
- * @param {string} value The password value.
- */
+* Validate that the password field is not empty.
+* 
+* @param {string} value The password value.
+*/
 function validatePassword(value){
     if(value){
         loginPasswordError.style.opacity = 0
@@ -111,10 +112,10 @@ loginPassword.addEventListener('input', (e) => {
 })
 
 /**
- * Enable or disable the login button.
- * 
- * @param {boolean} v True to enable, false to disable.
- */
+* Enable or disable the login button.
+* 
+* @param {boolean} v True to enable, false to disable.
+*/
 function loginDisabled(v){
     if(loginButton.disabled !== v){
         loginButton.disabled = v
@@ -122,10 +123,10 @@ function loginDisabled(v){
 }
 
 /**
- * Enable or disable loading elements.
- * 
- * @param {boolean} v True to enable, false to disable.
- */
+* Enable or disable loading elements.
+* 
+* @param {boolean} v True to enable, false to disable.
+*/
 function loginLoading(v){
     if(v){
         loginButton.setAttribute('loading', v)
@@ -137,10 +138,10 @@ function loginLoading(v){
 }
 
 /**
- * Enable or disable login form.
- * 
- * @param {boolean} v True to enable, false to disable.
- */
+* Enable or disable login form.
+* 
+* @param {boolean} v True to enable, false to disable.
+*/
 function formDisabled(v){
     loginDisabled(v)
     loginCancelButton.disabled = v
@@ -189,51 +190,99 @@ loginButton.addEventListener('click', () => {
     // Show loading stuff.
     loginLoading(true)
 
-    AuthManager.addMojangAccount(loginUsername.value, loginPassword.value).then((value) => {
-        updateSelectedAccount(value)
-        loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.loggingIn'), Lang.queryJS('login.success'))
-        $('.circle-loader').toggleClass('load-complete')
-        $('.checkmark').toggle()
-        setTimeout(() => {
-            switchView(VIEWS.login, loginViewOnSuccess, 500, 500, () => {
+    if(isOfficialLogin){
+        AuthManager.addMojangAccount(loginUsername.value, loginPassword.value).then((value) => {
+            updateSelectedAccount(value)
+            loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.loggingIn'), Lang.queryJS('login.success'))
+            $('.circle-loader').toggleClass('load-complete')
+            $('.checkmark').toggle()
+            setTimeout(() => {
+                switchView(VIEWS.login, loginViewOnSuccess, 500, 500, () => {
                 // Temporary workaround
-                if(loginViewOnSuccess === VIEWS.settings){
-                    prepareSettings()
-                }
-                loginViewOnSuccess = VIEWS.landing // Reset this for good measure.
-                loginCancelEnabled(false) // Reset this for good measure.
-                loginViewCancelHandler = null // Reset this for good measure.
-                loginUsername.value = ''
-                loginPassword.value = ''
-                $('.circle-loader').toggleClass('load-complete')
-                $('.checkmark').toggle()
-                loginLoading(false)
-                loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.success'), Lang.queryJS('login.login'))
-                formDisabled(false)
-            })
-        }, 1000)
-    }).catch((displayableError) => {
-        loginLoading(false)
+                    if(loginViewOnSuccess === VIEWS.settings){
+                        prepareSettings()
+                    }
+                    loginViewOnSuccess = VIEWS.landing // Reset this for good measure.
+                    loginCancelEnabled(false) // Reset this for good measure.
+                    loginViewCancelHandler = null // Reset this for good measure.
+                    loginUsername.value = ''
+                    loginPassword.value = ''
+                    $('.circle-loader').toggleClass('load-complete')
+                    $('.checkmark').toggle()
+                    loginLoading(false)
+                    loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.success'), Lang.queryJS('login.login'))
+                    formDisabled(false)
+                })
+            }, 1000)
+        }).catch((displayableError) => {
+            loginLoading(false)
 
-        let actualDisplayableError
-        if(isDisplayableError(displayableError)) {
-            msftLoginLogger.error('Error while logging in.', displayableError)
-            actualDisplayableError = displayableError
-        } else {
+            let actualDisplayableError
+            if(isDisplayableError(displayableError)) {
+                msftLoginLogger.error('Error while logging in.', displayableError)
+                actualDisplayableError = displayableError
+            } else {
             // Uh oh.
-            msftLoginLogger.error('Unhandled error during login.', displayableError)
-            actualDisplayableError = {
-                title: 'Unknown Error During Login',
-                desc: 'An unknown error has occurred. Please see the console for details.'
+                msftLoginLogger.error('Unhandled error during login.', displayableError)
+                actualDisplayableError = {
+                    title: 'Erreur inconnue lors de la connexion',
+                    desc: 'Une erreur inconnue s\'est produite. Veuillez consulter la console pour plus de détails.'
+                }
             }
-        }
 
-        setOverlayContent(actualDisplayableError.title, actualDisplayableError.desc, Lang.queryJS('login.tryAgain'))
-        setOverlayHandler(() => {
-            formDisabled(false)
-            toggleOverlay(false)
+            setOverlayContent(actualDisplayableError.title, actualDisplayableError.desc, Lang.queryJS('login.tryAgain'))
+            setOverlayHandler(() => {
+                formDisabled(false)
+                toggleOverlay(false)
+            })
+            toggleOverlay(true)
         })
-        toggleOverlay(true)
-    })
+    }else{
+        AuthManager.addUnofficalAccount(loginUsername.value).then(value => {
+            updateSelectedAccount(value)
+            loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.loggingIn'), Lang.queryJS('login.success'))
+            $('.circle-loader').toggleClass('load-complete')
+            $('.checkmark').toggle()
+            setTimeout(() => {
+                switchView(VIEWS.login, loginViewOnSuccess, 500, 500, () => {
+                // Temporary workaround
+                    if(loginViewOnSuccess === VIEWS.settings){
+                        prepareSettings()
+                    }
+                    loginViewOnSuccess = VIEWS.landing // Reset this for good measure.
+                    loginCancelEnabled(false) // Reset this for good measure.
+                    loginViewCancelHandler = null // Reset this for good measure.
+                    loginUsername.value = ''
+                    $('.circle-loader').toggleClass('load-complete')
+                    $('.checkmark').toggle()
+                    loginLoading(false)
+                    loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.success'), Lang.queryJS('login.login'))
+                    formDisabled(false)
+                })
+            }, 1000)
+        }).catch(displayableError => {
+            loginLoading(false)
+
+            let actualDisplayableError
+            if(isDisplayableError(displayableError)) {
+                msftLoginLogger.error('Error while logging in.', displayableError)
+                actualDisplayableError = displayableError
+            } else {
+            // Uh oh.
+                msftLoginLogger.error('Unhandled error during login.', displayableError)
+                actualDisplayableError = {
+                    title: 'Erreur inconnue lors de la connexion',
+                    desc: 'Une erreur inconnue s\'est produite. Veuillez consulter la console pour plus de détails.'
+                }
+            }
+
+            setOverlayContent(actualDisplayableError.title, actualDisplayableError.desc, Lang.queryJS('login.tryAgain'))
+            setOverlayHandler(() => {
+                formDisabled(false)
+                toggleOverlay(false)
+            })
+            toggleOverlay(true)
+        })
+    }
 
 })

@@ -9,6 +9,7 @@
  * @module authmanager
  */
 // Requirements
+const uuidv4 = require('uuid').v4
 const ConfigManager          = require('./configmanager')
 const { LoggerUtil }         = require('helios-core')
 const { RestResponseStatus } = require('helios-core/common')
@@ -51,6 +52,25 @@ exports.addMojangAccount = async function(username, password) {
             return Promise.reject(mojangErrorDisplayable(response.mojangErrorCode))
         }
         
+    } catch (err){
+        log.error(err)
+        return Promise.reject(mojangErrorDisplayable(MojangErrorCode.UNKNOWN))
+    }
+}
+
+/**
+ * Add an unofficial account. The resultant data will be stored as an auth account in the
+ * configuration database.
+ * 
+ * @param {string} username The account username.
+ * @returns {Promise.<Object>} Promise which resolves the resolved authenticated account object.
+ */
+exports.addUnofficalAccount = async function(username) {
+    try {
+        const uuid = uuidv4().replaceAll('-', '')
+        const ret = ConfigManager.addUnofficalAuthAccount(uuid, username, username)
+        ConfigManager.save()
+        return ret        
     } catch (err){
         log.error(err)
         return Promise.reject(mojangErrorDisplayable(MojangErrorCode.UNKNOWN))
@@ -200,6 +220,29 @@ exports.removeMicrosoftAccount = async function(uuid){
 }
 
 /**
+ * Remove an unofficial account.
+ * 
+ * @param {string} uuid The UUID of the account to be removed.
+ * @returns {Promise.<void>} Promise which resolves to void when the action is complete.
+ */
+exports.removeUnofficialAccount = async function(uuid){
+    try {
+        const authAcc = ConfigManager.getAuthAccount(uuid)
+        if(authAcc) {
+            ConfigManager.removeAuthAccount(uuid)
+            ConfigManager.save()
+            return Promise.resolve()
+        } else {
+            log.error('Error while removing account, uuid not found.')
+            return Promise.reject(new Error('Error while removing account, uuid not found.'))
+        }
+    } catch (err){
+        log.error('Error while removing account', err)
+        return Promise.reject(err)
+    }
+}
+
+/**
  * Validate the selected account with Mojang's authserver. If the account is not valid,
  * we will attempt to refresh the access token and update that value. If that fails, a
  * new login will be required.
@@ -308,8 +351,10 @@ exports.validateSelected = async function(){
 
     if(current.type === 'microsoft') {
         return await validateSelectedMicrosoftAccount()
-    } else {
+    } else if(current.type === 'mojang') {
         return await validateSelectedMojangAccount()
+    } else {
+        return true
     }
     
 }

@@ -434,7 +434,7 @@ body, button {
 /* The X in a circle icon for the cancel button. */
 #loginCancelIcon {
     border-radius: 50%;
-    border: 1px solid white;
+    border: 1.5px solid white;
     box-sizing: border-box;
     height: 30px;
     width: 30px;
@@ -443,6 +443,10 @@ body, button {
     margin: 0 auto;
     margin-bottom: 5px;
     transition: 0.25s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 0 0 36px;
 }
 /* Text for the login cancel button. */
 #loginCancelText {

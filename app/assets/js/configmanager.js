@@ -6,7 +6,7 @@ const logger = require('./loggerutil')('%c[ConfigManager]', 'color: #a02d2a; fon
 
 const sysRoot = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME)
 // TODO change
-const dataPath = path.join(sysRoot, '.helioslauncher')
+const dataPath = path.join(sysRoot, '.mythicallauncher')
 
 // Forked processes do not have access to electron, so we have this workaround.
 const launcherDir = process.env.CONFIG_DIRECT_PATH || require('@electron/remote').app.getPath('userData')
@@ -76,8 +76,12 @@ const DEFAULT_CONFIG = {
             maxRAM: resolveMaxRAM(), // Dynamic
             executable: null,
             jvmOptions: [
-                '-XX:+UseConcMarkSweepGC',
-                '-XX:+CMSIncrementalMode',
+                '-XX:+UnlockExperimentalVMOptions',
+                '-XX:+UseG1GC',
+                '-XX:G1NewSizePercent=20',
+                '-XX:G1ReservePercent=20',
+                '-XX:MaxGCPauseMillis=50',
+                '-XX:G1HeapRegionSize=32M',
                 '-XX:-UseAdaptiveSizePolicy',
                 '-Xmn128M'
             ],
@@ -346,6 +350,28 @@ exports.addMojangAuthAccount = function(uuid, accessToken, username, displayName
     config.authenticationDatabase[uuid] = {
         type: 'mojang',
         accessToken,
+        username: username.trim(),
+        uuid: uuid.trim(),
+        displayName: displayName.trim()
+    }
+    return config.authenticationDatabase[uuid]
+}
+
+/**
+ * Adds an unofficial mojang account to the database to be stored.
+ * 
+ * @param {string} uuid The uuid of the unofficial account.
+ * @param {string} accessToken The accessToken of the unofficial account.
+ * @param {string} username The username (usually email) of the unofficial account.
+ * @param {string} displayName The in game name of the unofficial account.
+ * 
+ * @returns {Object} The unofficial account object created by this action.
+ */
+exports.addUnofficalAuthAccount = function(uuid, username, displayName){
+    config.selectedAccount = uuid
+    config.authenticationDatabase[uuid] = {
+        type: 'unofficial',
+        accessToken: '00000000000000000000000000000000',
         username: username.trim(),
         uuid: uuid.trim(),
         displayName: displayName.trim()

@@ -121,7 +121,7 @@ ipcMain.on(MSFT_OPCODE.OPEN_LOGIN, (ipcEvent, ...arguments_) => {
     msftAuthViewSuccess = arguments_[0]
     msftAuthViewOnClose = arguments_[1]
     msftAuthWindow = new BrowserWindow({
-        title: 'Microsoft Login',
+        title: 'Connexion avec Microsoft',
         backgroundColor: '#222222',
         width: 520,
         height: 600,

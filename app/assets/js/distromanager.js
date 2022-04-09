@@ -134,12 +134,12 @@ class Module {
             case exports.Types.ForgeHosted:
             case exports.Types.LiteLoader:
             case exports.Types.ForgeMod:
-            return 'jar'
+                return 'jar'
             case exports.Types.LiteMod:
-            return 'litemod'
+                return 'litemod'
             case exports.Types.File:
             default:
-            return 'jar' // There is no default extension really.
+                return 'jar' // There is no default extension really.
         }
     }
 
@@ -181,19 +181,19 @@ class Module {
             case exports.Types.Library:
             case exports.Types.ForgeHosted:
             case exports.Types.LiteLoader:
-            this.artifact.path = path.join(ConfigManager.getCommonDirectory(), 'libraries', pth)
-            break
+                this.artifact.path = path.join(ConfigManager.getCommonDirectory(), 'libraries', pth)
+                break
             case exports.Types.ForgeMod:
             case exports.Types.LiteMod:
-            this.artifact.path = path.join(ConfigManager.getCommonDirectory(), 'modstore', pth)
-            break
+                this.artifact.path = path.join(ConfigManager.getCommonDirectory(), 'modstore', pth)
+                break
             case exports.Types.VersionManifest:
-            this.artifact.path = path.join(ConfigManager.getCommonDirectory(), 'versions', this.getIdentifier(), `${this.getIdentifier()}.json`)
-            break
+                this.artifact.path = path.join(ConfigManager.getCommonDirectory(), 'versions', this.getIdentifier(), `${this.getIdentifier()}.json`)
+                break
             case exports.Types.File:
             default:
-            this.artifact.path = path.join(ConfigManager.getInstanceDirectory(), serverid, pth)
-            break
+                this.artifact.path = path.join(ConfigManager.getInstanceDirectory(), serverid, pth)
+                break
         }
 
     }

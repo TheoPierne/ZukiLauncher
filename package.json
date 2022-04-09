@@ -1,6 +1,6 @@
 {
   "name": "mythicallauncher",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "productName": "Mythical Launcher",
   "description": "Modded Minecraft Launcher",
   "author": "Wouhait (https://github.com/TheoPierne/)",
@@ -40,12 +40,13 @@
     "request": "^2.88.2",
     "semver": "^7.3.6",
     "tar-fs": "^2.1.1",
+    "uuid": "^8.3.2",
     "winreg": "^1.2.4"
   },
   "devDependencies": {
     "electron": "^18.0.3",
     "electron-builder": "^22.14.13",
-    "eslint": "^8.12.0"
+    "eslint": "^8.13.0"
   },
   "repository": {
     "type": "git",

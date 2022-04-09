@@ -1769,7 +1769,7 @@ class AssetGuard extends EventEmitter {
                         self.emit('complete', 'download')
                     }
                 } else {
-                    return this.startAsyncProcess(identifier, limit);
+                    return this.startAsyncProcess(identifier, limit)
                 }
 
             })
@@ -1789,7 +1789,7 @@ class AssetGuard extends EventEmitter {
      * immediately. Once all downloads are complete, this function will fire the 'complete' event on the
      * global object instance.
      * 
-     * @param {Array.<{id: string, limit: number}>} identifiers Optional. The identifiers to process and corresponding parallel async task limit.
+     * @param {Array<{id: string, limit: number}>} identifiers Optional. The identifiers to process and corresponding parallel async task limit.
      */
     processDlQueues(identifiers = [{id:'assets', limit:20}, {id:'libraries', limit:5}, {id:'files', limit:5}, {id:'forge', limit:5}]){
         return new Promise((resolve, reject) => {
