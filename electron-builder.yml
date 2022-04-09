@@ -1,4 +1,4 @@
-appId: 'mythicallauncher'
+appId: 'com.wouhait.mythicallauncher'
 productName: 'Mythical Launcher'
 artifactName: '${productName}-setup-${version}.${ext}'
 
