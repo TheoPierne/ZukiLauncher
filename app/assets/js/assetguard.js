@@ -460,14 +460,14 @@ class JavaGuard extends EventEmitter {
                 console.log(props[i].trim())
                 const verOb = JavaGuard.parseJavaRuntimeVersion(verString)
                 if(verOb.major < 9){
-                    // Java 8
+                    /*// Java 8
                     if(verOb.major === 8 && verOb.update > 52){
                         meta.version = verOb
                         ++checksum
                         if(checksum === goal){
                             break
                         }
-                    }
+                    }*/
                 } else if(verOb.major >= 16) {
                     // TODO Make this logic better. Make java 16 required.
                     // Java 9+
