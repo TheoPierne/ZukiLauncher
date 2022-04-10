@@ -234,7 +234,7 @@ class JavaGuard extends EventEmitter {
      * 
      * @returns {Promise.<OpenJDKData>} Promise which resolved to an object containing the JRE download data.
      */
-    static _latestOpenJDK(major = '8'){
+    static _latestOpenJDK(major = '18'){
 
         if(process.platform === 'darwin') {
             return this._latestCorretto(major)
@@ -559,15 +559,14 @@ class JavaGuard extends EventEmitter {
     static _scanRegistry(){
 
         return new Promise((resolve, reject) => {
-            // Keys for Java v9.0.0 and later:
-            // 'SOFTWARE\\JavaSoft\\JRE'
-            // 'SOFTWARE\\JavaSoft\\JDK'
-            // Forge does not yet support Java 9, therefore we do not.
+            // Keys for Java v1.8.0 and prior:
+            // 'SOFTWARE\\JavaSoft\\Java Runtime Environment'
+            // 'SOFTWARE\\JavaSoft\\Java Development Kit'
 
-            // Keys for Java 1.8 and prior:
+            // Keys for Java 9 and after:
             const regKeys = [
-                '\\SOFTWARE\\JavaSoft\\Java Runtime Environment',
-                '\\SOFTWARE\\JavaSoft\\Java Development Kit'
+                '\\SOFTWARE\\JavaSoft\\JRE',
+                '\\SOFTWARE\\JavaSoft\\JDK'
             ]
 
             let keysDone = 0
@@ -608,7 +607,7 @@ class JavaGuard extends EventEmitter {
                                         const javaVer = javaVers[j]
                                         const vKey = javaVer.key.substring(javaVer.key.lastIndexOf('\\')+1)
                                         // Only Java 8 is supported currently.
-                                        if(parseFloat(vKey) === 1.8){
+                                        if(parseInt(vKey) === 18){
                                             javaVer.get('JavaHome', (err, res) => {
                                                 const jHome = res.value
                                                 if(jHome.indexOf('(x86)') === -1){
@@ -1544,7 +1543,7 @@ class AssetGuard extends EventEmitter {
 
     _enqueueOpenJDK(dataDir){
         return new Promise((resolve, reject) => {
-            JavaGuard._latestOpenJDK('8').then(verData => {
+            JavaGuard._latestOpenJDK('18').then(verData => {
                 if(verData != null){
 
                     dataDir = path.join(dataDir, 'runtime', 'x64')
