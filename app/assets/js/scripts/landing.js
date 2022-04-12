@@ -325,7 +325,7 @@ function asyncSystemScan(mcVersion, launchAfter = true){
                 // Show this information to the user.
                 setOverlayContent(
                     'Aucune installation<br>Java compatible n\'a été trouvée',
-                    'Pour rejoindre WesterosCraft, vous avez besoin d\'une installation 64 bits de Java 8. Souhaitez-vous que nous en installions une copie ?',
+                    'Pour rejoindre WesterosCraft, vous avez besoin d\'une installation 64 bits de Java 18. Souhaitez-vous que nous en installions une copie ?',
                     'Installer Java',
                     'Installer manuellement'
                 )
@@ -340,7 +340,7 @@ function asyncSystemScan(mcVersion, launchAfter = true){
                         //$('#overlayDismiss').toggle(false)
                         setOverlayContent(
                             'Java est requis<br>pour lancer',
-                            'Une installation x64 valide de Java 8 est requise pour le lancement.<br><br>Veuillez vous référer à notre <a href="https://github.com/dscalzi/HeliosLauncher/wiki/Java-Management#manually-installing-a -valid-version-of-java">Guide de gestion Java</a> pour obtenir des instructions sur l\'installation manuelle de Java.',
+                            'Une installation x64 valide de Java 18 est requise pour le lancement.<br><br>Veuillez vous référer à notre <a href="https://github.com/dscalzi/HeliosLauncher/wiki/Java-Management#manually-installing-a-valid-version-of-java">Guide de gestion Java</a> pour obtenir des instructions sur l\'installation manuelle de Java.',
                             'Je comprend',
                             'Retour'
                         )
@@ -693,7 +693,10 @@ function dlAsync(login = true){
                     data = data.trim()
                     if(data.indexOf('Could not find or load main class net.minecraft.launchwrapper.Launch') > -1){
                         loggerLaunchSuite.error('Game launch failed, LaunchWrapper was not downloaded properly.')
-                        showLaunchFailure('Erreur lors du lancement', 'Le fichier principal, LaunchWrapper, n\'a pas pu être téléchargé correctement. Par conséquent, le jeu ne peut pas se lancer.<br><br>Pour résoudre ce problème, désactivez temporairement votre logiciel antivirus et relancez le jeu.<br><br>Si vous avez le temps, veuillez <a href="https ://github.com/TheoPierne/MythicalLauncher/issues">soumettez un problème</a> et faites-nous savoir quel logiciel antivirus vous utilisez. Nous allons les contacter et essayer d\'arranger les choses.')
+                        showLaunchFailure('Erreur lors du lancement', 'Le fichier principal, LaunchWrapper, n\'a pas pu être téléchargé correctement. Par conséquent, le jeu ne peut pas se lancer.<br><br>Pour résoudre ce problème, désactivez temporairement votre logiciel antivirus et relancez le jeu.<br><br>Si vous avez le temps, veuillez <a href="https ://github.com/TheoPierne/MythicalLauncher/issues">soumettez un problème</a> et faites-nous savoir quel logiciel antivirus vous utilisez.')
+                    }else{
+                        loggerLaunchSuite.error('Game launch failed, an error occured', data)
+                        showLaunchFailure('Erreur lors du lancement', `Veuillez vérifier la console (CTRL + Shift + i) pour plus de détails et contactez le développeur si besoin.`)
                     }
                 }
 
@@ -705,7 +708,7 @@ function dlAsync(login = true){
                     proc.stdout.on('data', tempListener)
                     proc.stderr.on('data', gameErrorListener)
 
-                    setLaunchDetails('Terminé. Profitez du serveur !')
+                    setLaunchDetails('Terminé. Bon jeu !')
 
                     // Init Discord Hook
                     const distro = DistroManager.getDistribution()
@@ -723,7 +726,7 @@ function dlAsync(login = true){
                 } catch(err) {
 
                     loggerLaunchSuite.error('Error during launch', err)
-                    showLaunchFailure('Erreur lors du lancement', 'Veuillez vérifier la console (CTRL + Shift + i) pour plus de détails.')
+                    showLaunchFailure('Erreur lors du lancement', 'Veuillez vérifier la console (CTRL + Shift + i) pour plus de détails et contactez le développeur si besoin.')
 
                 }
             }
@@ -737,7 +740,7 @@ function dlAsync(login = true){
     // Begin Validations
 
     // Validate Forge files.
-    setLaunchDetails('Chargement des informations sur le serveur..')
+    setLaunchDetails('Chargement des données..')
 
     refreshDistributionIndex(true, (data) => {
         onDistroRefresh(data)
