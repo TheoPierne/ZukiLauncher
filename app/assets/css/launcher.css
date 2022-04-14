@@ -1139,6 +1139,16 @@ body, button {
     text-shadow: none;
 }
 
+#updateButtonAlert {
+    width: 5px;
+    height: 5px;
+    position: absolute;
+    border-radius: 50%;
+    background: red;
+    right: 10px;
+    top: 34%;
+}
+
 /* Div to add some space between nav items. */
 .settingsNavSpacer {
     height: 25px;
@@ -3089,6 +3099,21 @@ input:checked + .toggleSwitchSlider:before {
     display: flex;
     align-items: center;
     outline: none;
+}
+
+#settingsButtonAlert {
+    width: 5px;
+    height: 5px;
+    position: absolute;
+    border-radius: 50%;
+    background: red;
+    right: -0.5px;
+    top: 20%;
+}
+.mediaButton:hover #settingsButtonAlert,
+.mediaButton:focus #settingsButtonAlert,
+.mediaButton:active #settingsButtonAlert {
+    display: none;
 }
 
 #settingsMediaContainer {

@@ -696,7 +696,7 @@ function dlAsync(login = true){
                         showLaunchFailure('Erreur lors du lancement', 'Le fichier principal, LaunchWrapper, n\'a pas pu être téléchargé correctement. Par conséquent, le jeu ne peut pas se lancer.<br><br>Pour résoudre ce problème, désactivez temporairement votre logiciel antivirus et relancez le jeu.<br><br>Si vous avez le temps, veuillez <a href="https ://github.com/TheoPierne/MythicalLauncher/issues">soumettez un problème</a> et faites-nous savoir quel logiciel antivirus vous utilisez.')
                     }else{
                         loggerLaunchSuite.error('Game launch failed, an error occured', data)
-                        showLaunchFailure('Erreur lors du lancement', `Veuillez vérifier la console (CTRL + Shift + i) pour plus de détails et contactez le développeur si besoin.`)
+                        showLaunchFailure('Erreur lors du lancement', 'Veuillez vérifier la console (CTRL + Shift + i) pour plus de détails et contactez le développeur si besoin.')
                     }
                 }
 

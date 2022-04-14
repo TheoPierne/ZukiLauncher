@@ -1,7 +1,7 @@
 /**
- * Initialize UI functions which depend on internal modules.
- * Loaded after core UI functions are initialized in uicore.js.
- */
+* Initialize UI functions which depend on internal modules.
+* Loaded after core UI functions are initialized in uicore.js.
+*/
 // Requirements
 const path          = require('path')
 
@@ -27,32 +27,34 @@ const VIEWS = {
 let currentView
 
 /**
- * Switch launcher views.
- * 
- * @param {string} current The ID of the current view container. 
- * @param {*} next The ID of the next view container.
- * @param {*} currentFadeTime Optional. The fade out time for the current view.
- * @param {*} nextFadeTime Optional. The fade in time for the next view.
- * @param {*} onCurrentFade Optional. Callback function to execute when the current
- * view fades out.
- * @param {*} onNextFade Optional. Callback function to execute when the next view
- * fades in.
- */
+* Switch launcher views.
+* 
+* @param {string} current The ID of the current view container. 
+* @param {*} next The ID of the next view container.
+* @param {*} currentFadeTime Optional. The fade out time for the current view.
+* @param {*} nextFadeTime Optional. The fade in time for the next view.
+* @param {*} onCurrentFade Optional. Callback function to execute when the current
+* view fades out.
+* @param {*} onNextFade Optional. Callback function to execute when the next view
+* fades in.
+*/
 function switchView(current, next, currentFadeTime = 500, nextFadeTime = 500, onCurrentFade = () => {}, onNextFade = () => {}){
-    currentView = next
-    $(`${current}`).fadeOut(currentFadeTime, () => {
-        onCurrentFade()
-        $(`${next}`).fadeIn(nextFadeTime, () => {
-            onNextFade()
+    if((next === VIEWS.landing || next === VIEWS.settings) && Object.keys(ConfigManager.getAuthAccounts()).length > 0){
+        currentView = next
+        $(`${current}`).fadeOut(currentFadeTime, () => {
+            onCurrentFade()
+            $(`${next}`).fadeIn(nextFadeTime, () => {
+                onNextFade()
+            })
         })
-    })
+    }
 }
 
 /**
- * Get the currently shown view container.
- * 
- * @returns {string} The currently shown view container.
- */
+* Get the currently shown view container.
+* 
+* @returns {string} The currently shown view container.
+*/
 function getCurrentView(){
     return currentView
 }
@@ -128,10 +130,10 @@ function showFatalStartupError(){
 }
 
 /**
- * Common functions to perform after refreshing the distro index.
- * 
- * @param {Object} data The distro index object.
- */
+* Common functions to perform after refreshing the distro index.
+* 
+* @param {Object} data The distro index object.
+*/
 function onDistroRefresh(data){
     updateSelectedServer(data.getServer(ConfigManager.getSelectedServer()))
     refreshServerStatus()
@@ -140,10 +142,10 @@ function onDistroRefresh(data){
 }
 
 /**
- * Sync the mod configurations with the distro index.
- * 
- * @param {Object} data The distro index object.
- */
+* Sync the mod configurations with the distro index.
+* 
+* @param {Object} data The distro index object.
+*/
 function syncModConfigurations(data){
 
     const syncedCfgs = []
@@ -224,12 +226,12 @@ function syncModConfigurations(data){
 }
 
 /**
- * Recursively scan for optional sub modules. If none are found,
- * this function returns a boolean. If optional sub modules do exist,
- * a recursive configuration object is returned.
- * 
- * @returns {boolean | Object} The resolved mod configuration.
- */
+* Recursively scan for optional sub modules. If none are found,
+* this function returns a boolean. If optional sub modules do exist,
+* a recursive configuration object is returned.
+* 
+* @returns {boolean | Object} The resolved mod configuration.
+*/
 function scanOptionalSubModules(mdls, origin){
     if(mdls != null){
         const mods = {}
@@ -266,14 +268,14 @@ function scanOptionalSubModules(mdls, origin){
 }
 
 /**
- * Recursively merge an old configuration into a new configuration.
- * 
- * @param {boolean | Object} o The old configuration value.
- * @param {boolean | Object} n The new configuration value.
- * @param {boolean} nReq If the new value is a required mod.
- * 
- * @returns {boolean | Object} The merged configuration.
- */
+* Recursively merge an old configuration into a new configuration.
+* 
+* @param {boolean | Object} o The old configuration value.
+* @param {boolean | Object} n The new configuration value.
+* @param {boolean} nReq If the new value is a required mod.
+* 
+* @returns {boolean | Object} The merged configuration.
+*/
 function mergeModConfiguration(o, n, nReq = false){
     if(typeof o === 'boolean'){
         if(typeof n === 'boolean') return o
@@ -345,7 +347,7 @@ async function validateSelectedAccount(){
                     document.getElementById('loginUsername').value = selectedAcc.username
                     validateEmail(selectedAcc.username)
                 }
-                
+                        
                 loginOptionsViewOnLoginSuccess = getCurrentView()
                 loginOptionsViewOnLoginCancel = VIEWS.loginOptions
 
@@ -400,11 +402,11 @@ async function validateSelectedAccount(){
 }
 
 /**
- * Temporary function to update the selected account along
- * with the relevent UI elements.
- * 
- * @param {string} uuid The UUID of the account.
- */
+        * Temporary function to update the selected account along
+        * with the relevent UI elements.
+        * 
+        * @param {string} uuid The UUID of the account.
+        */
 function setSelectedAccount(uuid){
     const authAcc = ConfigManager.setSelectedAccount(uuid)
     ConfigManager.save()

@@ -177,7 +177,7 @@ exports.addMicrosoftAccount = async function(authCode) {
         fullAuth.accessToken.access_token,
         fullAuth.accessToken.refresh_token,
         calculateExpiryDate(now, fullAuth.accessToken.expires_in)
-        )
+    )
     ConfigManager.save()
 
     return ret
@@ -319,7 +319,7 @@ async function validateSelectedMicrosoftAccount(){
                 res.accessToken.refresh_token,
                 calculateExpiryDate(now, res.accessToken.expires_in),
                 calculateExpiryDate(now, res.mcToken.expires_in)
-                )
+            )
             ConfigManager.save()
             return true
         } catch(err) {
@@ -337,7 +337,7 @@ async function validateSelectedMicrosoftAccount(){
                 current.microsoft.refresh_token,
                 current.microsoft.expires_at,
                 calculateExpiryDate(now, res.mcToken.expires_in)
-                )
+            )
             ConfigManager.save()
             return true
         }
