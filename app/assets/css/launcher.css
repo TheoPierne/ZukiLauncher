@@ -1139,16 +1139,6 @@ body, button {
     text-shadow: none;
 }
 
-#updateButtonAlert {
-    width: 5px;
-    height: 5px;
-    position: absolute;
-    border-radius: 50%;
-    background: red;
-    right: 10px;
-    top: 34%;
-}
-
 /* Div to add some space between nav items. */
 .settingsNavSpacer {
     height: 25px;
@@ -2900,7 +2890,7 @@ input:checked + .toggleSwitchSlider:before {
     top: 0%;
     left: 0%;
     border-radius: 50%;
-    box-shadow: 0 0 15px #43c628;
+    box-shadow: 0 0 15px #fff;
     animation: glow-grow 4s ease-out infinite;
     background: rgba(0, 0, 0, 0.15);
 }
@@ -2914,7 +2904,6 @@ input:checked + .toggleSwitchSlider:before {
     visibility: hidden;
     opacity: 0;
     width: 100px;
-    height: 15px;
     background-color: rgb(0, 0, 0);
     color: #fff;
     text-align: center;
@@ -3099,21 +3088,6 @@ input:checked + .toggleSwitchSlider:before {
     display: flex;
     align-items: center;
     outline: none;
-}
-
-#settingsButtonAlert {
-    width: 5px;
-    height: 5px;
-    position: absolute;
-    border-radius: 50%;
-    background: red;
-    right: -0.5px;
-    top: 20%;
-}
-.mediaButton:hover #settingsButtonAlert,
-.mediaButton:focus #settingsButtonAlert,
-.mediaButton:active #settingsButtonAlert {
-    display: none;
 }
 
 #settingsMediaContainer {

@@ -53,7 +53,8 @@ if(!isDev){
                     info.darwindownload = `https://github.com/TheoPierne/MythicalLauncher/releases/download/v${info.version}/Mythical-Launcher-setup-${info.version}${process.arch === 'arm64' ? '-arm64' : '-x64'}.dmg`
                     showUpdateUI(info)
                 }
-                
+
+                showUpdateUI(info)                
                 populateSettingsUpdateInformation(info)
                 break
             case 'update-downloaded':
@@ -72,7 +73,7 @@ if(!isDev){
             case 'ready':
                 updateCheckListener = setInterval(() => {
                     ipcRenderer.send('autoUpdateAction', 'checkForUpdate')
-                }, 1800000)
+                }, 300000) // Check for update every 5 minutes
                 ipcRenderer.send('autoUpdateAction', 'checkForUpdate')
                 break
             case 'realerror':

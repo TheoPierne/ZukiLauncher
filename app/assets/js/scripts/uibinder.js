@@ -117,7 +117,7 @@ function showFatalStartupError(){
                 'Erreur fatale: impossible de charger l\'index de distribution',
                 'Aucune connexion n\'a pu être établie avec nos serveurs pour télécharger l\'index de distribution. Aucune copie locale n\'était disponible pour le chargement. <br><br>L\'index de distribution est un fichier essentiel qui fournit les dernières informations sur le serveur. Le lanceur ne peut pas démarrer sans lui. Assurez-vous d\'être connecté à Internet et relancez l\'application.',
                 'Fermer'
-                )
+            )
             setOverlayHandler(() => {
                 const window = remote.getCurrentWindow()
                 window.close()
@@ -277,174 +277,174 @@ function scanOptionalSubModules(mdls, origin){
 function mergeModConfiguration(o, n, nReq = false){
     if(typeof o === 'boolean'){
         if(typeof n === 'boolean') return o
-            else if(typeof n === 'object'){
-                if(!nReq){
-                    n.value = o
-                }
-                return n
+        else if(typeof n === 'object'){
+            if(!nReq){
+                n.value = o
             }
-        } else if(typeof o === 'object'){
-            if(typeof n === 'boolean') return typeof o.value !== 'undefined' ? o.value : true
-                else if(typeof n === 'object'){
-                    if(!nReq){
-                        n.value = typeof o.value !== 'undefined' ? o.value : true
-                    }
-
-                    const newMods = Object.keys(n.mods)
-                    for(let i=0; i<newMods.length; i++){
-
-                        const mod = newMods[i]
-                        if(o.mods[mod] != null){
-                            n.mods[mod] = mergeModConfiguration(o.mods[mod], n.mods[mod])
-                        }
-                    }
-
-                    return n
-                }
-            }
-    // If for some reason we haven't been able to merge,
-    // wipe the old value and use the new one. Just to be safe
             return n
         }
-
-        function refreshDistributionIndex(remote, onSuccess, onError){
-            if(remote){
-                DistroManager.pullRemote()
-                .then(onSuccess)
-                .catch(onError)
-            } else {
-                DistroManager.pullLocal()
-                .then(onSuccess)
-                .catch(onError)
+    } else if(typeof o === 'object'){
+        if(typeof n === 'boolean') return typeof o.value !== 'undefined' ? o.value : true
+        else if(typeof n === 'object'){
+            if(!nReq){
+                n.value = typeof o.value !== 'undefined' ? o.value : true
             }
+
+            const newMods = Object.keys(n.mods)
+            for(let i=0; i<newMods.length; i++){
+
+                const mod = newMods[i]
+                if(o.mods[mod] != null){
+                    n.mods[mod] = mergeModConfiguration(o.mods[mod], n.mods[mod])
+                }
+            }
+
+            return n
         }
+    }
+    // If for some reason we haven't been able to merge,
+    // wipe the old value and use the new one. Just to be safe
+    return n
+}
 
-        async function validateSelectedAccount(){
-            const selectedAcc = ConfigManager.getSelectedAccount()
-            if(selectedAcc != null){
-                const val = await AuthManager.validateSelected()
-                if(!val){
-                    ConfigManager.removeAuthAccount(selectedAcc.uuid)
-                    ConfigManager.save()
-                    const accLen = Object.keys(ConfigManager.getAuthAccounts()).length
-                    setOverlayContent(
-                        'Échec de l\'actualisation de la connexion',
-                        `Nous n'avons pas pu actualiser la connexion pour <strong>${selectedAcc.displayName}</strong>. Veuillez ${accLen > 0 ? 'sélectionnez un autre compte ou ' : ''} vous reconnecter.`,
-                        'Connexion',
-                        'Sélectionnez un autre compte'
-                        )
-                    setOverlayHandler(() => {
+function refreshDistributionIndex(remote, onSuccess, onError){
+    if(remote){
+        DistroManager.pullRemote()
+            .then(onSuccess)
+            .catch(onError)
+    } else {
+        DistroManager.pullLocal()
+            .then(onSuccess)
+            .catch(onError)
+    }
+}
 
-                        const isMicrosoft = selectedAcc.type === 'microsoft'
+async function validateSelectedAccount(){
+    const selectedAcc = ConfigManager.getSelectedAccount()
+    if(selectedAcc != null){
+        const val = await AuthManager.validateSelected()
+        if(!val){
+            ConfigManager.removeAuthAccount(selectedAcc.uuid)
+            ConfigManager.save()
+            const accLen = Object.keys(ConfigManager.getAuthAccounts()).length
+            setOverlayContent(
+                'Échec de l\'actualisation de la connexion',
+                `Nous n'avons pas pu actualiser la connexion pour <strong>${selectedAcc.displayName}</strong>. Veuillez ${accLen > 0 ? 'sélectionnez un autre compte ou ' : ''} vous reconnecter.`,
+                'Connexion',
+                'Sélectionnez un autre compte'
+            )
+            setOverlayHandler(() => {
 
-                        if(isMicrosoft) {
+                const isMicrosoft = selectedAcc.type === 'microsoft'
+
+                if(isMicrosoft) {
                     // Empty for now
-                        } else {
+                } else {
                     // Mojang
                     // For convenience, pre-populate the username of the account.
-                            document.getElementById('loginUsername').value = selectedAcc.username
-                            validateEmail(selectedAcc.username)
-                        }
-                        
-                        loginOptionsViewOnLoginSuccess = getCurrentView()
-                        loginOptionsViewOnLoginCancel = VIEWS.loginOptions
-
-                        if(accLen > 0) {
-                            loginOptionsViewOnCancel = getCurrentView()
-                            loginOptionsViewCancelHandler = () => {
-                                if(isMicrosoft) {
-                                    ConfigManager.addMicrosoftAuthAccount(
-                                        selectedAcc.uuid,
-                                        selectedAcc.accessToken,
-                                        selectedAcc.username,
-                                        selectedAcc.expiresAt,
-                                        selectedAcc.microsoft.access_token,
-                                        selectedAcc.microsoft.refresh_token,
-                                        selectedAcc.microsoft.expires_at
-                                        )
-                                } else {
-                                    ConfigManager.addMojangAuthAccount(selectedAcc.uuid, selectedAcc.accessToken, selectedAcc.username, selectedAcc.displayName)
-                                }
-                                ConfigManager.save()
-                                validateSelectedAccount()
-                            }
-                            loginOptionsCancelEnabled(true)
-                        } else {
-                            loginOptionsCancelEnabled(false)
-                        }
-                        toggleOverlay(false)
-                        switchView(getCurrentView(), VIEWS.loginOptions)
-                    })
-                    setDismissHandler(() => {
-                        if(accLen > 1){
-                            prepareAccountSelectionList()
-                            $('#overlayContent').fadeOut(250, () => {
-                                bindOverlayKeys(true, 'accountSelectContent', true)
-                                $('#accountSelectContent').fadeIn(250)
-                            })
-                        } else {
-                            const accountsObj = ConfigManager.getAuthAccounts()
-                            const accounts = Array.from(Object.keys(accountsObj), v => accountsObj[v])
-                    // This function validates the account switch.
-                            setSelectedAccount(accounts[0].uuid)
-                            toggleOverlay(false)
-                        }
-                    })
-                    toggleOverlay(true, accLen > 0)
-                } else {
-                    return true
+                    document.getElementById('loginUsername').value = selectedAcc.username
+                    validateEmail(selectedAcc.username)
                 }
-            } else {
-                return true
-            }
-        }
+                        
+                loginOptionsViewOnLoginSuccess = getCurrentView()
+                loginOptionsViewOnLoginCancel = VIEWS.loginOptions
 
-        /**
+                if(accLen > 0) {
+                    loginOptionsViewOnCancel = getCurrentView()
+                    loginOptionsViewCancelHandler = () => {
+                        if(isMicrosoft) {
+                            ConfigManager.addMicrosoftAuthAccount(
+                                selectedAcc.uuid,
+                                selectedAcc.accessToken,
+                                selectedAcc.username,
+                                selectedAcc.expiresAt,
+                                selectedAcc.microsoft.access_token,
+                                selectedAcc.microsoft.refresh_token,
+                                selectedAcc.microsoft.expires_at
+                            )
+                        } else {
+                            ConfigManager.addMojangAuthAccount(selectedAcc.uuid, selectedAcc.accessToken, selectedAcc.username, selectedAcc.displayName)
+                        }
+                        ConfigManager.save()
+                        validateSelectedAccount()
+                    }
+                    loginOptionsCancelEnabled(true)
+                } else {
+                    loginOptionsCancelEnabled(false)
+                }
+                toggleOverlay(false)
+                switchView(getCurrentView(), VIEWS.loginOptions)
+            })
+            setDismissHandler(() => {
+                if(accLen > 1){
+                    prepareAccountSelectionList()
+                    $('#overlayContent').fadeOut(250, () => {
+                        bindOverlayKeys(true, 'accountSelectContent', true)
+                        $('#accountSelectContent').fadeIn(250)
+                    })
+                } else {
+                    const accountsObj = ConfigManager.getAuthAccounts()
+                    const accounts = Array.from(Object.keys(accountsObj), v => accountsObj[v])
+                    // This function validates the account switch.
+                    setSelectedAccount(accounts[0].uuid)
+                    toggleOverlay(false)
+                }
+            })
+            toggleOverlay(true, accLen > 0)
+        } else {
+            return true
+        }
+    } else {
+        return true
+    }
+}
+
+/**
         * Temporary function to update the selected account along
         * with the relevent UI elements.
         * 
         * @param {string} uuid The UUID of the account.
         */
-        function setSelectedAccount(uuid){
-            const authAcc = ConfigManager.setSelectedAccount(uuid)
-            ConfigManager.save()
-            updateSelectedAccount(authAcc)
-            validateSelectedAccount()
-        }
+function setSelectedAccount(uuid){
+    const authAcc = ConfigManager.setSelectedAccount(uuid)
+    ConfigManager.save()
+    updateSelectedAccount(authAcc)
+    validateSelectedAccount()
+}
 
 // Synchronous Listener
-        document.addEventListener('readystatechange', function(){
+document.addEventListener('readystatechange', function(){
 
-            if (document.readyState === 'interactive' || document.readyState === 'complete'){
-                if(rscShouldLoad){
-                    rscShouldLoad = false
-                    if(!fatalStartupError){
-                        const data = DistroManager.getDistribution()
-                        showMainUI(data)
-                    } else {
-                        showFatalStartupError()
-                    }
-                } 
+    if (document.readyState === 'interactive' || document.readyState === 'complete'){
+        if(rscShouldLoad){
+            rscShouldLoad = false
+            if(!fatalStartupError){
+                const data = DistroManager.getDistribution()
+                showMainUI(data)
+            } else {
+                showFatalStartupError()
             }
+        } 
+    }
 
-        }, false)
+}, false)
 
 // Actions that must be performed after the distribution index is downloaded.
-        ipcRenderer.on('distributionIndexDone', (event, res) => {
-            if(res) {
-                const data = DistroManager.getDistribution()
-                syncModConfigurations(data)
-                if(document.readyState === 'interactive' || document.readyState === 'complete'){
-                    showMainUI(data)
-                } else {
-                    rscShouldLoad = true
-                }
-            } else {
-                fatalStartupError = true
-                if(document.readyState === 'interactive' || document.readyState === 'complete'){
-                    showFatalStartupError()
-                } else {
-                    rscShouldLoad = true
-                }
-            }
-        })
+ipcRenderer.on('distributionIndexDone', (event, res) => {
+    if(res) {
+        const data = DistroManager.getDistribution()
+        syncModConfigurations(data)
+        if(document.readyState === 'interactive' || document.readyState === 'complete'){
+            showMainUI(data)
+        } else {
+            rscShouldLoad = true
+        }
+    } else {
+        fatalStartupError = true
+        if(document.readyState === 'interactive' || document.readyState === 'complete'){
+            showFatalStartupError()
+        } else {
+            rscShouldLoad = true
+        }
+    }
+})
