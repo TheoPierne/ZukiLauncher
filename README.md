@@ -54,10 +54,10 @@ If you download from the [Releases](https://github.com/TheoPierne/MythicalLaunch
 
 | Platform | File |
 | -------- | ---- |
-| Windows x64 | `Helios-Launcher-setup-VERSION.exe` |
-| macOS x64 | `Helios-Launcher-setup-VERSION-x64.dmg` |
-| macOS arm64 | `Helios-Launcher-setup-VERSION-arm64.dmg` |
-| Linux x64 | `Helios-Launcher-setup-VERSION.AppImage` |
+| Windows x64 | `Mythical-Launcher-setup-VERSION.exe` |
+| macOS x64 | `Mythical-Launcher-setup-VERSION-x64.dmg` |
+| macOS arm64 | `Mythical-Launcher-setup-VERSION-arm64.dmg` |
+| Linux x64 | `Mythical-Launcher-setup-VERSION.AppImage` |
 
 ## Console
 
