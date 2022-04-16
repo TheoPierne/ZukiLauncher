@@ -4,7 +4,7 @@
   "productName": "Mythical Launcher",
   "description": "Modded Minecraft Launcher",
   "author": "Wouhait (https://github.com/TheoPierne/)",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "homepage": "https://github.com/TheoPierne/MythicalLauncher",
   "bugs": {
     "url": "https://github.com/TheoPierne/MythicalLauncher/issues"
@@ -38,13 +38,13 @@
     "minecraft-protocol": "^1.33.0",
     "node-stream-zip": "^1.15.0",
     "request": "^2.88.2",
-    "semver": "^7.3.6",
+    "semver": "^7.3.7",
     "tar-fs": "^2.1.1",
     "uuid": "^8.3.2",
     "winreg": "^1.2.4"
   },
   "devDependencies": {
-    "electron": "^18.0.3",
+    "electron": "^18.0.4",
     "electron-builder": "^23.0.3",
     "eslint": "^8.13.0"
   },
