@@ -752,11 +752,15 @@ class ProcessBuilder {
 
                         // Extract the file.
                         if(!shouldExclude){
-                            fs.writeFile(path.join(tempNativePath, fileName), zipEntries[i].getData(), (err) => {
-                                if(err){
-                                    logger.error('Error while extracting native library:', err)
-                                }
-                            })
+                            if(!fileName.includes('..')){
+                                fs.writeFile(path.join(tempNativePath, fileName), zipEntries[i].getData(), (err) => {
+                                    if(err){
+                                        logger.error('Error while extracting native library:', err)
+                                    }
+                                })
+                            }else{
+                                logger.error(`${fileName} includes '..' that can cause bad path save. (see: https://cwe.mitre.org/data/definitions/22.html)`)
+                            }
                         }
     
                     }
