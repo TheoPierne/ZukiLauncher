@@ -4,7 +4,7 @@
 
 <em><h5 align="center">(formerly Electron Launcher)</h5></em>
 
-[<p align="center"><img src="https://img.shields.io/github/workflow/status/TheoPierne/MythicalLauncher/Build.svg?style=for-the-badge" alt="gh actions">](https://github.com/TheoPierne/MythicalLauncher/actions) [<img src="https://img.shields.io/github/downloads/TheoPierne/MythicalLauncher/total.svg?style=for-the-badge" alt="downloads">](https://github.com/TheoPierne/MythicalLauncher/releases) <img src="https://github.com/TheoPierne/MythicalLauncher/app/assets/images/icons/mythical-S3.svg"  height="28px" alt="mythical-saison-3"></p>
+[<p align="center"><img src="https://img.shields.io/github/workflow/status/TheoPierne/MythicalLauncher/Build.svg?style=for-the-badge" alt="gh actions">](https://github.com/TheoPierne/MythicalLauncher/actions) [<img src="https://img.shields.io/github/downloads/TheoPierne/MythicalLauncher/total.svg?style=for-the-badge" alt="downloads">](https://github.com/TheoPierne/MythicalLauncher/releases) <img src="https://github.com/TheoPierne/MythicalLauncher/app/assets/images/icons/mythical-s3.svg"  height="28px" alt="mythical-saison-3"></p>
 
 <p align="center">Join modded servers without worrying about installing Java, Forge, or other mods. We'll handle that for you.</p>
 
