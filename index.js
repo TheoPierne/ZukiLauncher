@@ -228,6 +228,7 @@ function createWindow() {
         icon: getPlatformIcon('SealCircle'),
         frame: false,
         webPreferences: {
+            disableBlinkFeatures: 'Auxclick',
             preload: path.join(__dirname, 'app', 'assets', 'js', 'preloader.js'),
             nodeIntegration: true,
             contextIsolation: false
@@ -243,6 +244,10 @@ function createWindow() {
     /*win.once('ready-to-show', () => {
         win.show()
     })*/
+
+    win.webContents.on('new-window', event => {
+        event.preventDefault()
+    })
 
     win.removeMenu()
 
