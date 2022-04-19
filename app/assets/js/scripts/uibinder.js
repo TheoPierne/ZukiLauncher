@@ -4,6 +4,7 @@
 */
 // Requirements
 const path          = require('path')
+const {readdirSync} = require('fs')        
 
 const AuthManager   = require('./assets/js/authmanager')
 const ConfigManager = require('./assets/js/configmanager')
@@ -57,6 +58,16 @@ function getCurrentView(){
     return currentView
 }
 
+/**
+* Change the image background every minute randomly  
+*/
+function changeBackgroundImage(){
+    document.body.style.backgroundImage = `url('assets/images/backgrounds/${document.body.getAttribute('bkid')}.jpg'`
+    setInterval(() => {
+        document.body.style.backgroundImage = `url('assets/images/backgrounds/${Math.floor(Math.random() * readdirSync(path.join(__dirname, 'assets', 'images', 'backgrounds')).length)}.jpg'`
+    }, 60000)
+}
+
 function showMainUI(data){
 
     if(!isDev){
@@ -69,7 +80,7 @@ function showMainUI(data){
     refreshServerStatus()
     setTimeout(() => {
         document.getElementById('frameBar').style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
-        document.body.style.backgroundImage = `url('assets/images/backgrounds/${document.body.getAttribute('bkid')}.jpg')`
+        changeBackgroundImage()
         $('#main').show()
 
         const isLoggedIn = Object.keys(ConfigManager.getAuthAccounts()).length > 0
