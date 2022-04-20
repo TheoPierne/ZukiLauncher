@@ -1494,17 +1494,38 @@ const settingsUpdateChangelogTitle = settingsTabUpdate.getElementsByClassName('s
 const settingsUpdateChangelogText  = settingsTabUpdate.getElementsByClassName('settingsChangelogText')[0]
 const settingsUpdateChangelogCont  = settingsTabUpdate.getElementsByClassName('settingsChangelogContainer')[0]
 const settingsUpdateActionButton   = document.getElementById('settingsUpdateActionButton')
+let currentIter = null
 
 /**
  * Update the properties of the update action button.
  * 
  * @param {string} text The new button text.
  * @param {boolean} disabled Optional. Disable or enable the button
+ * @param {boolean} doAnimation Optional. Start or stop loading animation.
  * @param {function} handler Optional. New button event handler.
  */
-function settingsUpdateButtonStatus(text, disabled = false, handler = null){
+function settingsUpdateButtonStatus(text, disabled = false, doAnimation = false, handler = null){
     settingsUpdateActionButton.innerHTML = text
     settingsUpdateActionButton.disabled = disabled
+    if(doAnimation){
+        let iter = 0
+        let afterText = text
+        currentIter = setInterval(() => {
+            if(iter <= 2){
+                iter++
+                afterText += '.'
+            }else{
+                iter = 0
+                afterText = text
+            }
+            settingsUpdateActionButton.innerHTML = afterText
+        }, 500)
+    }else{
+        if(currentIter){
+            clearInterval(currentIter)
+            currentIter = null
+        }
+    }
     if(handler != null){
         settingsUpdateActionButton.onclick = handler
     }
@@ -1524,20 +1545,20 @@ function populateSettingsUpdateInformation(data){
         populateVersionInformation(data.version, settingsUpdateVersionValue, settingsUpdateVersionTitle, settingsUpdateVersionCheck)
         
         if(process.platform === 'darwin'){
-            settingsUpdateButtonStatus('Télécharger depuis GitHub<span style="font-size: 10px;color: gray;text-shadow: none !important;">Fermez le lanceur et exécutez le dmg pour mettre à jour.</span>', false, () => {
+            settingsUpdateButtonStatus('Télécharger depuis GitHub<span style="font-size: 10px;color: gray;text-shadow: none !important;">Fermez le launcher et exécutez le .dmg pour effectuer la mise à jour.</span>', false, false, () => {
                 shell.openExternal(data.darwindownload)
             })
         } else {
-            settingsUpdateButtonStatus('Téléchargement..', true)
+            settingsUpdateButtonStatus('Téléchargement', true, true)
         }
     } else {
         settingsUpdateTitle.innerHTML = 'Vous utilisez la dernière version'
         settingsUpdateChangelogCont.style.display = 'none'
         populateVersionInformation(remote.app.getVersion(), settingsUpdateVersionValue, settingsUpdateVersionTitle, settingsUpdateVersionCheck)
-        settingsUpdateButtonStatus('Vérifier les mises à jour', false, () => {
+        settingsUpdateButtonStatus('Vérifier les mises à jour', false, false, () => {
             if(!isDev){
                 ipcRenderer.send('autoUpdateAction', 'checkForUpdate')
-                settingsUpdateButtonStatus('Vérification des mises à jour..', true)
+                settingsUpdateButtonStatus('Vérification des mises à jour', true, true)
             }
         })
     }

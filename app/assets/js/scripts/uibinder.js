@@ -63,8 +63,9 @@ function getCurrentView(){
 */
 function changeBackgroundImage(){
     document.body.style.backgroundImage = `url('assets/images/backgrounds/${document.body.getAttribute('bkid')}.jpg'`
+    const backgroundimageLength = readdirSync(path.join(__dirname, 'assets', 'images', 'backgrounds')).length
     setInterval(() => {
-        document.body.style.backgroundImage = `url('assets/images/backgrounds/${Math.floor(Math.random() * readdirSync(path.join(__dirname, 'assets', 'images', 'backgrounds')).length)}.jpg'`
+        document.body.style.backgroundImage = `url('assets/images/backgrounds/${Math.floor(Math.random() * backgroundimageLength)}.jpg'`
     }, 60000)
 }
 
