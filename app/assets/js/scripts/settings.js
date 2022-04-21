@@ -1510,6 +1510,7 @@ function settingsUpdateButtonStatus(text, disabled = false, doAnimation = false,
     if(doAnimation){
         let iter = 0
         let afterText = text
+        clearInterval(currentIter)
         currentIter = setInterval(() => {
             if(iter <= 2){
                 iter++
@@ -1521,10 +1522,8 @@ function settingsUpdateButtonStatus(text, disabled = false, doAnimation = false,
             settingsUpdateActionButton.innerHTML = afterText
         }, 500)
     }else{
-        if(currentIter){
-            clearInterval(currentIter)
-            currentIter = null
-        }
+        clearInterval(currentIter)
+        currentIter = null
     }
     if(handler != null){
         settingsUpdateActionButton.onclick = handler

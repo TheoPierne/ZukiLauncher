@@ -44,7 +44,7 @@ if(!isDev){
         switch(arg){
             case 'checking-for-update':
                 loggerAutoUpdater.log('Checking for update..')
-                settingsUpdateButtonStatus('Vérification des mises à jour..', true)
+                settingsUpdateButtonStatus('Vérification des mises à jour', true, true)
                 break
             case 'update-available':
                 loggerAutoUpdaterSuccess.log('New update available', info.version)
@@ -59,7 +59,7 @@ if(!isDev){
                 break
             case 'update-downloaded':
                 loggerAutoUpdaterSuccess.log('Update ' + info.version + ' ready to be installed.')
-                settingsUpdateButtonStatus('Installer maintenant', false, () => {
+                settingsUpdateButtonStatus('Installer maintenant', false, false, () => {
                     if(!isDev){
                         ipcRenderer.send('autoUpdateAction', 'installUpdateNow')
                     }
