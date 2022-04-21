@@ -9,7 +9,8 @@
 * @module authmanager
 */
 // Requirements
-const uuidv4 = require('uuid').v4
+const uuidv5 = require('uuid').v5
+const {machineIdSync} = require('node-machine-id')
 const ConfigManager          = require('./configmanager')
 const { LoggerUtil }         = require('helios-core')
 const { RestResponseStatus } = require('helios-core/common')
@@ -33,7 +34,6 @@ const log = LoggerUtil.getLogger('AuthManager')
 exports.addMojangAccount = async function(username, password) {
     try {
         const response = await MojangRestAPI.authenticate(username, password, ConfigManager.getClientToken())
-        console.log(response)
         if(response.responseStatus === RestResponseStatus.SUCCESS) {
 
             const session = response.data
@@ -68,8 +68,11 @@ exports.addMojangAccount = async function(username, password) {
 exports.addUnofficalAccount = async function(username) {
     try {
         if(!['WOUHAIT', 'SKUUNSHEI'].includes(username.toUpperCase())){
-            const uuid = uuidv4().replaceAll('-', '')
+            const uuid = uuidv5(username + machineIdSync(), uuidv5.DNS).replaceAll('-', '')
             const ret = ConfigManager.addUnofficalAuthAccount(uuid, username, username)
+            if(ConfigManager.getClientToken() == null){
+                ConfigManager.setClientToken('00000000000000000000000000000000')
+            }
             ConfigManager.save()
             return ret
         }else{
