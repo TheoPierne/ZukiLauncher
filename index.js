@@ -73,7 +73,7 @@ ipcMain.on('autoUpdateAction', (event, arg, data) => {
             }
             break
         case 'installUpdateNow':
-            autoUpdater.quitAndInstall()
+            autoUpdater.quitAndInstall(true, true) //Silent installing and force run app after update
             break
         default:
             console.log('Unknown argument', arg)
