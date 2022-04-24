@@ -279,6 +279,7 @@ exports.getClientToken = function(){
  * @param {string} clientToken The launcher's new Client Token.
  */
 exports.setClientToken = function(clientToken){
+    console.trace()
     config.clientToken = clientToken
 }
 
