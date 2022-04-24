@@ -15,7 +15,7 @@
 
 * 🔒 Full account management.
   * Add multiple accounts and easily switch between them.
-  * Microsoft (OAuth 2.0) + Mojang (Yggdrasil) authentication fully supported.
+  * Microsoft (OAuth 2.0) + Mojang (Yggdrasil) + Cracked account authentication fully supported.
   * Credentials are never stored and transmitted directly to Mojang.
 * 📂 Efficient asset management.
   * Receive client updates as soon as we release them.
