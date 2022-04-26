@@ -638,6 +638,10 @@ function dlAsync(login = true){
                 showLaunchFailure('Erreur lors du lancement', 'Veuillez vérifier la console (CTRL + Shift + i) pour plus de détails.')
 
                 allGood = false
+            }else if(proc != null){
+                loggerLaunchSuite.error('Error during launch, an instance of Minecraft is already started.')
+                showLaunchFailure('Erreur lors du lancement', 'Une instance de Minecraft est déjà lancée, vous ne pouvez lancer qu\'une seule instance à la fois.')
+                allGood = false
             }
 
             forgeData = m.result.forgeData
