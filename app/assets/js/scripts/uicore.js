@@ -51,7 +51,6 @@ if(!isDev){
                 
                 if(process.platform === 'darwin'){
                     info.darwindownload = `https://github.com/TheoPierne/MythicalLauncher/releases/download/v${info.version}/Mythical-Launcher-setup-${info.version}${process.arch === 'arm64' ? '-arm64' : '-x64'}.dmg`
-                    showUpdateUI(info)
                 }
 
                 showUpdateUI(info)                
@@ -59,7 +58,7 @@ if(!isDev){
                 break
             case 'update-downloaded':
                 loggerAutoUpdaterSuccess.log('Update ' + info.version + ' ready to be installed.')
-                settingsUpdateButtonStatus('Installer maintenant', false, false, () => {
+                settingsUpdateButtonStatus('Redémarrer et mettre à jour', false, false, () => {
                     if(!isDev){
                         ipcRenderer.send('autoUpdateAction', 'installUpdateNow')
                     }

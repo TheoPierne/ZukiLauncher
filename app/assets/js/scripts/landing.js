@@ -324,7 +324,7 @@ function asyncSystemScan(mcVersion, launchAfter = true){
                 // Show this information to the user.
                 setOverlayContent(
                     'Aucune installation<br>Java compatible n\'a été trouvée',
-                    'Pour rejoindre WesterosCraft, vous avez besoin d\'une installation 64 bits de Java 18. Souhaitez-vous que nous en installions une copie ?',
+                    'Pour rejoindre Mythical, vous avez besoin d\'une installation 64 bits de Java 18. Souhaitez-vous que nous en installions une copie ?',
                     'Installer Java',
                     'Installer manuellement'
                 )
