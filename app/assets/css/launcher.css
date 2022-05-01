@@ -3489,8 +3489,8 @@ input:checked + .toggleSwitchSlider:before {
 #launch_details_text {
     font-size: 11px;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
+    white-space: normal;
+    overflow-wrap: break-word;
 }
 
 /*******************************************************************************
