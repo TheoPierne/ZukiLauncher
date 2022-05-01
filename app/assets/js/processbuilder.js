@@ -86,6 +86,9 @@ class ProcessBuilder {
         child.stderr.on('data', (data) => {
             loggerMCstderr.log(data)
         })
+        child.on('error', (error) => {
+            logger.log('An error occurred', error)
+        })
         child.on('close', (code, signal) => {
             logger.log('Exited with code', code)
             fs.remove(tempNativePath, (err) => {

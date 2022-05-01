@@ -710,6 +710,13 @@ function dlAsync(login = true){
                     // Bind listeners to stdout.
                     proc.stdout.on('data', tempListener)
                     proc.stderr.on('data', gameErrorListener)
+                    proc.on('error', error => loggerLaunchSuite.error(error))
+                    proc.on('close', (code, signal) => {
+                        if(code !== 0){
+                            loggerLaunchSuite.error('Minecraft didn\'t close correctly, code:', code)
+                            showLaunchFailure('Minecraft ne s\'est pas fermé correctement.', `Une erreur s\'est produite ce qui a entrainé la fermeture de Minecraft, voir la console pour plus d\'inforamtions (CTRL + Shift + I) <br>Code de fermeture: <pre>${code}</pre>`)
+                        }
+                    })
 
                     setLaunchDetails('Terminé. Bon jeu !')
 
