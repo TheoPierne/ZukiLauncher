@@ -671,7 +671,7 @@ function populateAuthAccounts(){
                     </div>
                     <div class="settingsAuthAccountDetailPane">
                         <div class="settingsAuthAccountDetailTitle">UUID</div>
-                        <div class="settingsAuthAccountDetailValue">${acc.uuid}</div>
+                        <div class="settingsAuthAccountDetailValue uuid">${acc.uuid}</div>
                     </div>
                 </div>
                 <div class="settingsAuthAccountActions">
