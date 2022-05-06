@@ -106,6 +106,16 @@ function changeAllowPrerelease(val){
     ipcRenderer.send('autoUpdateAction', 'allowPrereleaseChange', val)
 }
 
+/**
+ * Send a notification to the main process changing the value of
+ * minimizeOnClose.
+ * 
+ * @param {boolean} val The new close value.
+ */
+function changeCloseAction(val){
+    ipcRenderer.send('onCloseAction', val)
+}
+
 function showUpdateUI(info){
     //TODO Make this message a bit more informative `${info.version}`
     document.getElementById('image_seal_container').setAttribute('update', true)

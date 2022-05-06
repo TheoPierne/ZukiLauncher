@@ -193,6 +193,8 @@ function saveSettingsValues(){
                     // Special Conditions
                     if(cVal === 'AllowPrerelease'){
                         changeAllowPrerelease(v.checked)
+                    }else if(cVal === 'CloseAction'){
+                        changeCloseAction(v.checked)
                     }
                 }
             } else if(v.tagName === 'DIV'){

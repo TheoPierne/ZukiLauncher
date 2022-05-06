@@ -2,7 +2,7 @@ const remoteMain = require('@electron/remote/main')
 remoteMain.initialize()
 
 // Requirements
-const { app, BrowserWindow, ipcMain, Menu, shell } = require('electron')
+const { app, BrowserWindow, ipcMain, Menu, shell, nativeImage, Tray } = require('electron')
 const autoUpdater                       = require('electron-updater').autoUpdater
 const ejse                              = require('ejs-electron')
 const fs                                = require('fs')
@@ -11,6 +11,8 @@ const path                              = require('path')
 const semver                            = require('semver')
 const { pathToFileURL }                 = require('url')
 const { AZURE_CLIENT_ID, MSFT_OPCODE, MSFT_REPLY_TYPE, MSFT_ERROR, SHELL_OPCODE } = require('./app/assets/js/ipcconstants')
+
+let minimizeOnClose = false
 
 // Setup auto updater.
 function initAutoUpdater(event, data) {
@@ -83,6 +85,11 @@ ipcMain.on('autoUpdateAction', (event, arg, data) => {
 // Redirect distribution index event from preloader to renderer.
 ipcMain.on('distributionIndexDone', (event, res) => {
     event.sender.send('distributionIndexDone', res)
+})
+
+//Handle close action
+ipcMain.on('onCloseAction', (event, res) => {
+    minimizeOnClose = res
 })
 
 // Handle trash item.
@@ -173,7 +180,7 @@ ipcMain.on(MSFT_OPCODE.OPEN_LOGOUT, (ipcEvent, uuid, isLastAccount) => {
     msftLogoutSuccess = false
     msftLogoutSuccessSent = false
     msftLogoutWindow = new BrowserWindow({
-        title: 'Microsoft Logout',
+        title: 'Déconnexion de Microsoft',
         backgroundColor: '#222222',
         width: 520,
         height: 600,
@@ -215,11 +222,64 @@ ipcMain.on(MSFT_OPCODE.OPEN_LOGOUT, (ipcEvent, uuid, isLastAccount) => {
     msftLogoutWindow.loadURL('https://login.microsoftonline.com/common/oauth2/v2.0/logout')
 })
 
+let tray = null
+function createTray () {
+    const icon = getPlatformIcon('SealCircle') // required.
+    const trayicon = nativeImage.createFromPath(icon)
+    tray = new Tray(trayicon)
+    const contextMenu = Menu.buildFromTemplate([
+        {
+            label: 'Mythical Launcher', 
+            type: 'normal', 
+            enabled: false, 
+            icon: trayicon.resize({ width: 16 })
+        },
+        {
+            type: 'separator'
+        },
+        {
+            label: 'Chercher des MAJ...',
+            click: () => {
+                if(!win){
+                    createWindow()
+                }
+                if(!isDev){ 
+                    autoUpdater.checkForUpdates().catch(() => {})
+                }
+            }
+        },
+        {
+            type: 'separator'
+        },
+        {
+            label: 'Quitter',
+            click: () => {
+                app.quit() // actually quit the app.
+            }
+        },
+    ])
+
+    tray.setContextMenu(contextMenu)
+    tray.setToolTip('Mythical Launcher')
+
+    tray.on('click', () => {
+        if(win){
+            win.show()
+        }else{
+            createWindow()
+        }
+    })
+}
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win
 
 function createWindow() {
+
+    if (!tray) { // if tray hasn't been created already.
+        createTray()
+    }
 
     win = new BrowserWindow({
         width: 980,
@@ -345,7 +405,9 @@ app.on('window-all-closed', () => {
     // On macOS it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
     if (process.platform !== 'darwin') {
-        app.quit()
+        if(!minimizeOnClose){
+            app.quit()
+        }
     }
 })
 

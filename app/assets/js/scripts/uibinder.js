@@ -11,6 +11,8 @@ const ConfigManager = require('./assets/js/configmanager')
 const DistroManager = require('./assets/js/distromanager')
 const Lang          = require('./assets/js/langloader')
 
+ipcRenderer.send('onCloseAction', ConfigManager.getCloseAction())
+
 let rscShouldLoad = false
 let fatalStartupError = false
 

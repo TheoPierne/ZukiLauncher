@@ -95,7 +95,8 @@ const DEFAULT_CONFIG = {
         },
         launcher: {
             allowPrerelease: false,
-            dataDirectory: dataPath
+            dataDirectory: dataPath,
+            onCloseMinimize: false
         }
     },
     newsCache: {
@@ -765,4 +766,23 @@ exports.getAllowPrerelease = function(def = false){
  */
 exports.setAllowPrerelease = function(allowPrerelease){
     config.settings.launcher.allowPrerelease = allowPrerelease
+}
+
+/**
+ * Check if the launcher should close or minimize when click on close button.
+ * 
+ * @param {boolean} def Optional. If true, the default value will be returned.
+ * @returns {boolean} Whether or not the launcher should close or minimize when click on close button.
+ */
+exports.getCloseAction = function(def = false){
+    return !def ? config.settings.launcher.onCloseMinimize : DEFAULT_CONFIG.settings.launcher.onCloseMinimize
+}
+
+/**
+ * Change the status of Whether or not the launcher should close or minimize when click on close button.
+ * 
+ * @param {boolean} launchDetached Whether or not the launcher should close or minimize when click on close button.
+ */
+exports.setCloseAction = function(closeAction){
+    config.settings.launcher.onCloseMinimize = closeAction
 }
