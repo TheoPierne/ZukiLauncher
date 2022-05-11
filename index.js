@@ -90,7 +90,6 @@ ipcMain.on('distributionIndexDone', (event, res) => {
 
 //Handle close action
 ipcMain.on('onCloseAction', (event, arg, res) => {
-    console.log(arg, res)
     if(arg === 'closeAction'){
         minimizeOnClose = res
     }else if(arg === 'gameLaunch'){
