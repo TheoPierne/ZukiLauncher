@@ -222,8 +222,8 @@ const refreshServerStatus = async function(fade = false){
     loggerLanding.log('Refreshing Server Status')
     const serv = DistroManager.getDistribution().getServer(ConfigManager.getSelectedServer())
 
-    let pLabel = 'SERVER'
-    let pVal = 'OFFLINE'
+    let pLabel = 'SERVEUR'
+    let pVal = 'HORS LIGNE'
 
     try {
         const serverURL = new URL('my://' + serv.getAddress())
@@ -548,7 +548,7 @@ function dlAsync(login = true){
                 case 'assets':
                     setLaunchPercentage(60, 100)
                     loggerLaunchSuite.log('Asset Validation Complete')
-                    setLaunchDetails('Validation de l\'intégrité de la library..')
+                    setLaunchDetails('Validation de l\'intégrité des librairies..')
                     break
                 case 'libraries':
                     setLaunchPercentage(80, 100)
@@ -658,6 +658,7 @@ function dlAsync(login = true){
 
                 const onLoadComplete = () => {
                     toggleLaunchArea(false)
+                    changeCloseAction('gameLaunch', true)
                     if(hasRPC){
                         DiscordWrapper.updateDetails('Jeu en cours de chargement..')
                     }
@@ -727,6 +728,7 @@ function dlAsync(login = true){
                         hasRPC = true
                         proc.on('close', (code, signal) => {
                             loggerLaunchSuite.log('Shutting down Discord Rich Presence..')
+                            changeCloseAction('gameLaunch', false)
                             DiscordWrapper.shutdownRPC()
                             hasRPC = false
                             proc = null

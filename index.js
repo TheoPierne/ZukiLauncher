@@ -13,6 +13,7 @@ const { pathToFileURL }                 = require('url')
 const { AZURE_CLIENT_ID, MSFT_OPCODE, MSFT_REPLY_TYPE, MSFT_ERROR, SHELL_OPCODE } = require('./app/assets/js/ipcconstants')
 
 let minimizeOnClose = false
+let isGameLaunch = false
 
 // Setup auto updater.
 function initAutoUpdater(event, data) {
@@ -88,8 +89,15 @@ ipcMain.on('distributionIndexDone', (event, res) => {
 })
 
 //Handle close action
-ipcMain.on('onCloseAction', (event, res) => {
-    minimizeOnClose = res
+ipcMain.on('onCloseAction', (event, arg, res) => {
+    console.log(arg, res)
+    if(arg === 'closeAction'){
+        minimizeOnClose = res
+    }else if(arg === 'gameLaunch'){
+        isGameLaunch = res
+    }else{
+        console.log('Unknown argument', arg)
+    }
 })
 
 // Handle trash item.
@@ -313,6 +321,13 @@ function createWindow() {
 
     win.resizable = true
 
+    win.on('close', e => {
+        if(isGameLaunch){
+            e.preventDefault()
+            win.hide()
+        }
+    })
+
     win.on('closed', () => {
         win = null
     })
@@ -405,8 +420,12 @@ app.on('window-all-closed', () => {
     // On macOS it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
     if (process.platform !== 'darwin') {
-        if(!minimizeOnClose){
-            app.quit()
+        if(!isGameLaunch){
+            if(!minimizeOnClose){
+                app.quit()
+            }
+        }else{
+            win && win.hide()
         }
     }
 })

@@ -112,8 +112,8 @@ function changeAllowPrerelease(val){
  * 
  * @param {boolean} val The new close value.
  */
-function changeCloseAction(val){
-    ipcRenderer.send('onCloseAction', val)
+function changeCloseAction(arg, val){
+    ipcRenderer.send('onCloseAction', arg, val)
 }
 
 function showUpdateUI(info){
