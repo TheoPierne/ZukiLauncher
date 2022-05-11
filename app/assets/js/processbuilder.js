@@ -61,10 +61,6 @@ class ProcessBuilder {
 
         logger.log('Launch Arguments:', args)
 
-        // fs.copyFileSync(path.resolve('app', 'assets', 'dat', 'servers.dat'), path.join(this.gameDir, 'servers.dat'))
-
-        // logger.log(`Copy servers.dat to ${this.gameDir}`)
-
         const child = child_process.spawn(ConfigManager.getJavaExecutable(), args, {
             cwd: this.gameDir,
             detached: ConfigManager.getLaunchDetached()
