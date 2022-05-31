@@ -1768,7 +1768,7 @@ class AssetGuard extends EventEmitter {
                         self.emit('complete', 'download')
                     }
                 } else {
-                    return this.startAsyncProcess(identifier, limit)
+                    return self.startAsyncProcess(identifier, limit)
                 }
 
             })
