@@ -27,7 +27,7 @@
     "adm-zip": "^0.5.9",
     "async": "^3.2.3",
     "discord-rpc-patch": "^4.0.1",
-    "ejs": "^3.1.7",
+    "ejs": "^3.1.8",
     "ejs-electron": "^2.1.1",
     "electron-updater": "^5.0.2",
     "fs-extra": "^10.1.0",
@@ -45,9 +45,9 @@
     "winreg": "^1.2.4"
   },
   "devDependencies": {
-    "electron": "^18.2.2",
+    "electron": "^19.0.1",
     "electron-builder": "^23.0.3",
-    "eslint": "^8.15.0"
+    "eslint": "^8.16.0"
   },
   "repository": {
     "type": "git",
