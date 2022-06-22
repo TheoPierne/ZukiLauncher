@@ -29,7 +29,7 @@
     "discord-rpc-patch": "^4.0.1",
     "ejs": "^3.1.8",
     "ejs-electron": "^2.1.1",
-    "electron-updater": "^5.0.4",
+    "electron-updater": "^5.0.5",
     "fs-extra": "^10.1.0",
     "github-syntax-dark": "^0.5.0",
     "got": "^11.8.5",
@@ -45,9 +45,9 @@
     "winreg": "^1.2.4"
   },
   "devDependencies": {
-    "electron": "^19.0.4",
-    "electron-builder": "^23.0.3",
-    "eslint": "^8.17.0"
+    "electron": "^19.0.5",
+    "electron-builder": "^23.1.0",
+    "eslint": "^8.18.0"
   },
   "repository": {
     "type": "git",
