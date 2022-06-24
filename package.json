@@ -45,7 +45,7 @@
     "winreg": "^1.2.4"
   },
   "devDependencies": {
-    "electron": "^19.0.5",
+    "electron": "^19.0.6",
     "electron-builder": "^23.1.0",
     "eslint": "^8.18.0"
   },
