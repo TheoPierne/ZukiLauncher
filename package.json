@@ -20,7 +20,7 @@
     "lint": "eslint --config .eslintrc.json ."
   },
   "engines": {
-    "node": "16.x.x"
+    "node": "18.x.x"
   },
   "dependencies": {
     "@electron/remote": "^2.0.8",
@@ -33,7 +33,7 @@
     "fs-extra": "^10.1.0",
     "github-syntax-dark": "^0.5.0",
     "got": "^11.8.5",
-    "helios-core": "~0.1.1",
+    "helios-core": "~0.1.2",
     "jquery": "^3.6.1",
     "jsonwebtoken": "^8.5.1",
     "minecraft-protocol": "^1.36.1",
@@ -46,9 +46,9 @@
     "winreg": "^1.2.4"
   },
   "devDependencies": {
-    "electron": "^21.2.0",
+    "electron": "^21.2.2",
     "electron-builder": "^23.6.0",
-    "eslint": "^8.26.0"
+    "eslint": "^8.27.0"
   },
   "repository": {
     "type": "git",
