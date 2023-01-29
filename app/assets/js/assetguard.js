@@ -5,6 +5,7 @@ const child_process = require('child_process')
 const crypto        = require('crypto')
 const EventEmitter  = require('events')
 const fs            = require('fs-extra')
+const nodeDiskInfo  = require('node-disk-info')
 const StreamZip     = require('node-stream-zip')
 const path          = require('path')
 const Registry      = require('winreg')
@@ -342,6 +343,9 @@ class JavaGuard extends EventEmitter {
      * @returns {boolean} True if the path points to a Java executable, otherwise false.
      */
     static isJavaExecPath(pth){
+        if (pth == null) {
+            return false
+        }
         if(process.platform === 'win32'){
             return pth.endsWith(path.join('bin', 'javaw.exe'))
         } else if(process.platform === 'darwin'){
@@ -460,15 +464,17 @@ class JavaGuard extends EventEmitter {
                 console.log(props[i].trim())
                 const verOb = JavaGuard.parseJavaRuntimeVersion(verString)
                 if(verOb.major < 9){
-                    /*// Java 8
-                    if(verOb.major === 8 && verOb.update > 52){
-                        meta.version = verOb
-                        ++checksum
-                        if(checksum === goal){
-                            break
+                    // Java 8
+                    if(!Util.mcVersionAtLeast('1.17', this.mcVersion)){
+                        if(verOb.major === 8 && verOb.update > 52){
+                            meta.version = verOb
+                            ++checksum
+                            if(checksum === goal){
+                                break
+                            }
                         }
-                    }*/
-                } else if(verOb.major >= 16) {
+                    }
+                } else if(verOb.major >= 17) {
                     // TODO Make this logic better. Make java 16 required.
                     // Java 9+
                     if(Util.mcVersionAtLeast('1.17', this.mcVersion)){
@@ -804,12 +810,17 @@ class JavaGuard extends EventEmitter {
         let pathSet1 = await JavaGuard._scanRegistry()
         if(pathSet1.size === 0){
             // Do a manual file system scan of program files.
-            pathSet1 = new Set([
-                ...pathSet1,
-                ...(await JavaGuard._scanFileSystem('C:\\Program Files\\Java')),
-                ...(await JavaGuard._scanFileSystem('C:\\Program Files\\Eclipse Foundation')),
-                ...(await JavaGuard._scanFileSystem('C:\\Program Files\\AdoptOpenJDK'))
-            ])
+            // Check all drives
+            const driveMounts = nodeDiskInfo.getDiskInfoSync().map(({ mounted }) => mounted)
+            for(const mount of driveMounts) {
+                pathSet1 = new Set([
+                    ...pathSet1,
+                    ...(await JavaGuard._scanFileSystem(`${mount}\\Program Files\\Java`)),
+                    ...(await JavaGuard._scanFileSystem(`${mount}\\Program Files\\Eclipse Adoptium`)),
+                    ...(await JavaGuard._scanFileSystem(`${mount}\\Program Files\\Eclipse Foundation`)),
+                    ...(await JavaGuard._scanFileSystem(`${mount}\\Program Files\\AdoptOpenJDK`))
+                ])
+            }
         }
 
         // Get possible paths from the data directory.
@@ -1541,9 +1552,10 @@ class AssetGuard extends EventEmitter {
     // Java (Category=''') Validation (download) Functions
     // #region
 
-    _enqueueOpenJDK(dataDir){
+    _enqueueOpenJDK(dataDir, mcVersion){
         return new Promise((resolve, reject) => {
-            JavaGuard._latestOpenJDK('18').then(verData => {
+            const major = Util.mcVersionAtLeast('1.17', mcVersion) ? '17' : '8'
+            JavaGuard._latestOpenJDK(major).then(verData => {
                 if(verData != null){
 
                     dataDir = path.join(dataDir, 'runtime', 'x64')
