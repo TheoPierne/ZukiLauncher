@@ -10,6 +10,7 @@ const { MojangRestAPI, getServerStatus }     = require('helios-core/mojang')
 // Internal Requirements
 const DiscordWrapper          = require('./assets/js/discordwrapper')
 const ProcessBuilder          = require('./assets/js/processbuilder')
+const { Util } = require('./assets/js/assetguard')
 const { RestResponseStatus, isDisplayableError } = require('helios-core/common')
 
 // Launch Elements
@@ -87,7 +88,7 @@ function setLaunchEnabled(val){
 document.getElementById('launch_button').addEventListener('click', function(e){
     loggerLanding.log('Launching game..')
     const mcVersion = DistroManager.getDistribution().getServer(ConfigManager.getSelectedServer()).getMinecraftVersion()
-    const jExe = ConfigManager.getJavaExecutable()
+    const jExe = ConfigManager.getJavaExecutable(ConfigManager.getSelectedServer())
     if(jExe == null){
         asyncSystemScan(mcVersion)
     } else {
@@ -140,13 +141,13 @@ updateSelectedAccount(ConfigManager.getSelectedAccount())
 // Bind selected server
 function updateSelectedServer(serv){
     if(getCurrentView() === VIEWS.settings){
-        saveAllModConfigurations()
+        fullSettingsSave()
     }
     ConfigManager.setSelectedServer(serv != null ? serv.getID() : null)
     ConfigManager.save()
     server_selection_button.innerHTML = '\u2022 ' + (serv != null ? serv.getName() : 'No Server Selected')
     if(getCurrentView() === VIEWS.settings){
-        animateModsTabRefresh()
+        animateSettingsTabRefresh()
     }
     setLaunchEnabled(serv != null)
 }
@@ -315,6 +316,8 @@ function asyncSystemScan(mcVersion, launchAfter = true){
     sysAEx.stdio[2].on('data', (data) => {
         loggerSysAEx.log(data)
     })
+
+    const javaVer = Util.mcVersionAtLeast('1.17', mcVersion) ? '17' : '8'
     
     sysAEx.on('message', (m) => {
 
@@ -324,7 +327,7 @@ function asyncSystemScan(mcVersion, launchAfter = true){
                 // Show this information to the user.
                 setOverlayContent(
                     'Aucune installation<br>Java compatible n\'a été trouvée',
-                    'Pour rejoindre Mythical, vous avez besoin d\'une installation 64 bits de Java 18. Souhaitez-vous que nous en installions une copie ?',
+                    `Pour rejoindre Mythical, vous avez besoin d\'une installation 64 bits de Java ${javaVer}. Souhaitez-vous que nous en installions une copie ?`,
                     'Installer Java',
                     'Installer manuellement'
                 )
@@ -339,7 +342,7 @@ function asyncSystemScan(mcVersion, launchAfter = true){
                         //$('#overlayDismiss').toggle(false)
                         setOverlayContent(
                             'Java est requis<br>pour lancer',
-                            'Une installation x64 valide de Java 18 est requise pour le lancement.<br><br>Veuillez vous référer à notre <a href="https://github.com/dscalzi/HeliosLauncher/wiki/Java-Management#manually-installing-a-valid-version-of-java">Guide de gestion Java</a> pour obtenir des instructions sur l\'installation manuelle de Java.',
+                            `Une installation x64 valide de Java ${javaVer} est requise pour le lancement.<br><br>Veuillez vous référer à notre <a href="https://github.com/dscalzi/HeliosLauncher/wiki/Java-Management#manually-installing-a-valid-version-of-java">Guide de gestion Java</a> pour obtenir des instructions sur l\'installation manuelle de Java.`,
                             'Je comprend',
                             'Retour'
                         )
@@ -358,7 +361,7 @@ function asyncSystemScan(mcVersion, launchAfter = true){
 
             } else {
                 // Java installation found, use this to launch the game.
-                ConfigManager.setJavaExecutable(m.result)
+                ConfigManager.setJavaExecutable(ConfigManager.getSelectedServer(), m.result)
                 ConfigManager.save()
 
                 // We need to make sure that the updated value is on the settings UI.
@@ -432,7 +435,7 @@ function asyncSystemScan(mcVersion, launchAfter = true){
                     remote.getCurrentWindow().setProgressBar(-1)
 
                     // Extraction completed successfully.
-                    ConfigManager.setJavaExecutable(m.args[0])
+                    ConfigManager.setJavaExecutable(ConfigManager.getSelectedServer(), m.args[0])
                     ConfigManager.save()
 
                     if(extractListener != null){
@@ -504,7 +507,7 @@ function dlAsync(login = true){
     aEx = cp.fork(path.join(__dirname, 'assets', 'js', 'assetexec.js'), [
         'AssetGuard',
         ConfigManager.getCommonDirectory(),
-        ConfigManager.getJavaExecutable()
+        ConfigManager.getJavaExecutable(ConfigManager.getSelectedServer())
     ], {
         env: forkEnv,
         stdio: 'pipe'
