@@ -2,7 +2,7 @@ appId: 'com.wouhait.mythicallauncher'
 productName: 'Mythical Launcher'
 artifactName: '${productName}-setup-${version}.${ext}'
 
-copyright: 'Copyright © 2022 Théo Pierné'
+copyright: 'Copyright © 2023 Théo Pierné'
 
 asar: true
 compression: 'maximum'
