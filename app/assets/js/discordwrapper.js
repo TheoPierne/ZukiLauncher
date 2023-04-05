@@ -1,5 +1,6 @@
 // Work in progress
-const logger = require('./loggerutil')('%c[DiscordWrapper]', 'color: #7289da; font-weight: bold')
+const { LoggerUtil } = require('helios-core')
+const logger = LoggerUtil.getLogger('DiscordWrapper')
 
 const {Client} = require('discord-rpc-patch')
 
@@ -21,15 +22,15 @@ exports.initRPC = function(genSettings, servSettings, initialDetails = 'En atten
     }
 
     client.on('ready', () => {
-        logger.log('Discord RPC Connected')
+        logger.info('Discord RPC Connected')
         client.setActivity(activity)
     })
     
     client.login({clientId: genSettings.clientId}).catch(error => {
         if(error.message.includes('ENOENT')) {
-            logger.log('Unable to initialize Discord Rich Presence, no client detected.')
+            logger.info('Unable to initialize Discord Rich Presence, no client detected.')
         } else {
-            logger.log('Unable to initialize Discord Rich Presence: ' + error.message, error)
+            logger.info('Unable to initialize Discord Rich Presence: ' + error.message, error)
         }
     })
 }
