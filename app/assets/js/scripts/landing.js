@@ -121,14 +121,6 @@ document.getElementById('settingsMediaButton').onclick = async e => {
     switchView(getCurrentView(), VIEWS.settings)
 }
 
-// Bind avatar overlay button.
-document.getElementById('avatarOverlay').onclick = async e => {
-    await prepareSettings()
-    switchView(getCurrentView(), VIEWS.settings, 500, 500, () => {
-        settingsNavItemListener(document.getElementById('settingsNavAccount'), false)
-    })
-}
-
 // Bind selected account
 function updateSelectedAccount(authUser) {
     let username = 'No Account Selected'
@@ -162,6 +154,12 @@ server_selection_button.innerHTML = '\u2022 Chargement..'
 server_selection_button.onclick = async e => {
     e.target.blur()
     await toggleServerSelection(true)
+}
+
+// Bind avatar overlay button.
+document.getElementById('avatarOverlay').onclick = async e => {
+    e.target.blur()
+    await toggleAccountSelection(true, true)
 }
 
 // Update Mojang Status Color
@@ -233,7 +231,6 @@ const refreshServerStatus = async (fade = false) => {
     let pVal = 'HORS LIGNE'
 
     try {
-        console.log(serv)
         const servStat = await getServerStatus(47, serv.hostname, serv.port)
         pLabel = 'JOUEURS'
         pVal = servStat.players.online + '/' + servStat.players.max
@@ -291,7 +288,7 @@ async function asyncSystemScan(effectiveJavaOptions, launchAfter = true) {
 
     setLaunchDetails('Patientez..')
     toggleLaunchArea(true)
-    setLaunchPercentage(0, 100)
+    setLaunchPercentage(0)
 
 
     const jvmDetails = await discoverBestJvmInstallation(
@@ -304,7 +301,7 @@ async function asyncSystemScan(effectiveJavaOptions, launchAfter = true) {
         // Show this information to the user.
         setOverlayContent(
             'Aucune installation<br>Java compatible n\'a été trouvée',
-            `Pour rejoindre Mythical, vous avez besoin d\'une installation 64 bits de Java ${effectiveJavaOptions.suggestedMajor}. Souhaitez-vous que nous en installions une copie ?`,
+            `Pour rejoindre ZukiPalace, vous avez besoin d'une installation 64 bits de Java ${effectiveJavaOptions.suggestedMajor}. Souhaitez-vous que nous en installions une copie ?`,
             'Installer Java',
             'Installer manuellement'
         )
@@ -324,7 +321,7 @@ async function asyncSystemScan(effectiveJavaOptions, launchAfter = true) {
                 //$('#overlayDismiss').toggle(false)
                 setOverlayContent(
                     'Java est requis<br>pour démarrer Minecraft',
-                    `Une installation x64 valide de Java ${effectiveJavaOptions.suggestedMajor} est requise pour le lancement.<br><br>Veuillez vous référer à notre <a href="https://github.com/dscalzi/HeliosLauncher/wiki/Java-Management#manually-installing-a-valid-version-of-java">Guide de gestion Java</a> pour obtenir des instructions sur l\'installation manuelle de Java.`,
+                    `Une installation x64 valide de Java ${effectiveJavaOptions.suggestedMajor} est requise pour le lancement.<br><br>Veuillez vous référer à notre <a href="https://github.com/dscalzi/HeliosLauncher/wiki/Java-Management#manually-installing-a-valid-version-of-java">Guide de gestion Java</a> pour obtenir des instructions sur l'installation manuelle de Java.`,
                     'Je comprend',
                     'Retour'
                 )
@@ -362,8 +359,6 @@ async function asyncSystemScan(effectiveJavaOptions, launchAfter = true) {
 
 async function downloadJava(effectiveJavaOptions, launchAfter = true) {
 
-    // TODO Error handling.
-    // asset can be null.
     const asset = await latestOpenJDK(
         effectiveJavaOptions.suggestedMajor,
         ConfigManager.getDataDirectory(),
@@ -433,7 +428,7 @@ let hasRPC = false
 // Joined server regex
 // Change this if your server uses something different.
 const GAME_JOINED_REGEX = /\[.+\]: Sound engine started/
-const GAME_LAUNCH_REGEX = /^\[.+\]: (?:MinecraftForge .+ Initialized|ModLauncher .+ starting: .+)$/
+const GAME_LAUNCH_REGEX = /^\[.+\]: (?:MinecraftForge .+ Initialized|ModLauncher .+ starting: .+|Loading Minecraft .+ with Fabric Loader .+)$/
 const MIN_LINGER = 5000
 
 async function dlAsync(login = true) {
@@ -541,13 +536,13 @@ async function dlAsync(login = true) {
         serv.rawServer.id
     )
 
-    const forgeData = await distributionIndexProcessor.loadForgeVersionJson(serv)
+    const modLoaderData = await distributionIndexProcessor.loadModLoaderVersionJson(serv)
     const versionData = await mojangIndexProcessor.getVersionJson()
 
     if (login) {
         const authUser = ConfigManager.getSelectedAccount()
         loggerLaunchSuite.info(`Sending selected account (${authUser.displayName}) to ProcessBuilder.`)
-        let pb = new ProcessBuilder(serv, versionData, forgeData, authUser, remote.app.getVersion())
+        let pb = new ProcessBuilder(serv, versionData, modLoaderData, authUser, remote.app.getVersion())
         setLaunchDetails('Lancement du jeu..')
 
         // const SERVER_JOINED_REGEX = /\[.+\]: \[CHAT\] [a-zA-Z0-9_]{1,16} joined the game/
@@ -585,7 +580,7 @@ async function dlAsync(login = true) {
             if (SERVER_JOINED_REGEX.test(data)) {
                 DiscordWrapper.updateDetails('Exploration du Royaume !')
             } else if (GAME_JOINED_REGEX.test(data)) {
-                DiscordWrapper.updateDetails('Navigation vers Mythical !')
+                DiscordWrapper.updateDetails('Navigation vers ZukiPalace !')
             }
         }
 
@@ -593,7 +588,7 @@ async function dlAsync(login = true) {
             data = data.trim()
             if (data.indexOf('Could not find or load main class net.minecraft.launchwrapper.Launch') > -1) {
                 loggerLaunchSuite.error('Game launch failed, LaunchWrapper was not downloaded properly.')
-                showLaunchFailure('Erreur lors du lancement', 'Le fichier principal, LaunchWrapper, n\'a pas pu être téléchargé correctement. Par conséquent, le jeu ne peut pas se lancer.<br><br>Pour résoudre ce problème, désactivez temporairement votre logiciel antivirus et relancez le jeu.<br><br>Si vous avez le temps, veuillez <a href="https ://github.com/TheoPierne/MythicalLauncher/issues">soumettez un problème</a> et faites-nous savoir quel logiciel antivirus vous utilisez.')
+                showLaunchFailure('Erreur lors du lancement', 'Le fichier principal, LaunchWrapper, n\'a pas pu être téléchargé correctement. Par conséquent, le jeu ne peut pas se lancer.<br><br>Pour résoudre ce problème, désactivez temporairement votre logiciel antivirus et relancez le jeu.<br><br>Si vous avez le temps, veuillez <a href="https ://github.com/TheoPierne/ZukiLauncher/issues">soumettez un problème</a> et faites-nous savoir quel logiciel antivirus vous utilisez.')
             }
         }
 
@@ -614,8 +609,10 @@ async function dlAsync(login = true) {
 
             setLaunchDetails('Terminé. Bon jeu !')
 
+            console.log(distro, serv)
+
             // Init Discord Hook
-            if (distro.rawDistribution.discord != null && serv.rawServerdiscord != null) {
+            if (distro.rawDistribution.discord != null && serv.rawServer.discord != null) {
                 DiscordWrapper.initRPC(distro.rawDistribution.discord, serv.rawServer.discord)
                 hasRPC = true
                 proc.on('close', (code, signal) => {
@@ -975,7 +972,7 @@ async function loadNews() {
                 const items = $(data).find('item')
                 const articles = []
 
-                for (let i = 0; i < items.length; i++) {
+                for (let i = 0, itemsLength = items.length; i < itemsLength; i++) {
                     // JQuery Element
                     const el = $(items[i])
 
@@ -999,24 +996,22 @@ async function loadNews() {
                     let author = el.find('dc\\:creator').text()
 
                     // Generate article.
-                    articles.push(
-                        {
-                            link,
-                            title,
-                            date,
-                            author,
-                            content,
-                            comments,
-                            commentsLink: link + '#comments'
-                        }
-                    )
+                    articles.push({
+                        link,
+                        title,
+                        date,
+                        author,
+                        content,
+                        comments,
+                        commentsLink: link + '#comments'
+                    })
                 }
                 resolve({
                     articles
                 })
             },
             timeout: 2500
-        }).catch(err => {
+        }).catch(() => {
             resolve({
                 articles: null
             })

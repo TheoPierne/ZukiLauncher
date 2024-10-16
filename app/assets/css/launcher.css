@@ -66,6 +66,7 @@ body, button {
     transition: background-color 1s ease;
     /*background-color: rgba(0, 0, 0, 0.5);*/
     -webkit-user-select: none;
+    user-select: none;
 }
 
 /* Undraggable region on the top of the frame. */
@@ -347,12 +348,14 @@ body, button {
 #welcomeButton:hover #welcomeSVG,
 #welcomeButton:focus #welcomeSVG {
     -webkit-filter: drop-shadow(0px 0px 2px #fff);
+    filter: drop-shadow(0px 0px 2px #fff);
 }
 #welcomeButton:active #welcomeSVG .arrowLine {
     stroke: #c7c7c7;
 }
 #welcomeButton:active #welcomeSVG {
     -webkit-filter: drop-shadow(0px 0px 2px #c7c7c7);
+    filter: drop-shadow(0px 0px 2px #c7c7c7);
 }
 #welcomeButton:disabled #welcomeSVG .arrowLine {
     stroke: rgba(255, 255, 255, 0.75);
@@ -653,12 +656,14 @@ body, button {
 #loginButton:hover #loginSVG,
 #loginButton:focus #loginSVG {
     -webkit-filter: drop-shadow(0px 0px 2px #fff);
+    filter: drop-shadow(0px 0px 2px #fff);
 }
 #loginButton:active #loginSVG .arrowLine {
     stroke: #c7c7c7;
 }
 #loginButton:active #loginSVG {
     -webkit-filter: drop-shadow(0px 0px 2px #c7c7c7);
+    filter: drop-shadow(0px 0px 2px #c7c7c7);
 }
 #loginButton:disabled #loginSVG .arrowLine {
     stroke: rgba(255, 255, 255, 0.75);
@@ -809,6 +814,7 @@ body, button {
     cursor: pointer;
     font-size: 22px;
     -webkit-user-select: none;
+    user-select: none;
 }
 
 /* Hide the default checkbox. */
@@ -1320,6 +1326,9 @@ body, button {
     width: 75%;
     border-bottom: 1px solid rgba(255, 255, 255, 0.50);
 }
+.settingsFieldContainer:last-of-type {
+    border-bottom: none;
+}
 .settingsFieldLeft {
     display: flex;
     flex-direction: column;
@@ -1425,7 +1434,7 @@ input:checked + .toggleSwitchSlider:before {
 }
 
 .settingsFileSelContainer:last-child {
-    margin-bottom: 20px;
+    margin-top: 20px;
 }
 
 /* File selector title. */
@@ -1569,112 +1578,6 @@ input:checked + .toggleSwitchSlider:before {
     display: flex;
 }
 
-.settingsAuthAccountSkinEditor {
-    margin-top: 1em;
-}
-
-.settingsAuthAccountSkinViewer {
-    background-color: rgba(248, 255, 255, 0.33);
-    border-radius: 4px;
-    padding: 1em;
-    margin: 1em;
-}
-
-.skinEditor {
-    display: flex;
-}
-
-.skinVariantInput {
-    margin: 8px 0;    
-}
-
-.radiogroup {
-  padding: 16px 24px;
-  border-radius: 16px;
-  background: #ecf0f3;
-  box-shadow:
-    4px 4px 4px 0px #d1d9e6 inset,
-    -4px -4px 4px 0px #ffffff inset;
-}
-
-.state {
-  position: absolute;
-  top: 0;
-  right: 0;
-  opacity: 1e-5;
-  pointer-events: none;
-}
-
-.label {
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-  color: #394a56;
-}
-
-.text {
-  margin-left: 16px;
-  opacity: .6;
-  transition: opacity .2s linear, transform .2s ease-out;
-}
-
-.indicator {
-  position: relative;
-  border-radius: 50%;
-  height: 30px;
-  width: 30px;
-  box-shadow:
-    -8px -4px 8px 0px #ffffff,
-    8px 4px 12px 0px #d1d9e6;
-  overflow: hidden;
-}
-
-.indicator::before,
-.indicator::after {
-  content: '';
-  position: absolute;
-  top: 10%;
-  left: 10%;
-  height: 80%;
-  width: 80%;
-  border-radius: 50%;
-}
-
-.indicator::before {
-  box-shadow:
-    -4px -2px 4px 0px #d1d9e6,
-    4px 2px 8px 0px #fff;
-}
-
-.indicator::after {
-  background-color: #ecf0f3;
-  box-shadow:
-    -4px -2px 4px 0px #fff,
-    4px 2px 8px 0px #d1d9e6;
-  transform: scale3d(1, 1, 1);
-  transition: opacity .25s ease-in-out, transform .25s ease-in-out;
-}
-
-.state:checked ~ .label .indicator::after {
-  transform: scale3d(.975, .975, 1) translate3d(0, 10%, 0);
-  opacity: 0;
-}
-
-.state:focus ~ .label .text {
-  transform: translate3d(8px, 0, 0);
-  opacity: 1;
-}
-
-.label:hover .text {
-  opacity: 1;
-}
-
-
-.settingsAuthAccountSkinInfo {
-    margin-top: 1.2em;
-    margin-right: 1em;
-}
-
 /* Left hand side of an auth account element, for the skin image. */
 .settingsAuthAccountLeft {
     padding: 5px 5px 5px 20px;
@@ -1724,10 +1627,12 @@ input:checked + .toggleSwitchSlider:before {
 .settingsAuthAccountDetailValue {
     font-size: 14px;
     -webkit-user-select: initial;
+    user-select: initial;
 }
 
 .settingsAuthAccountDetailValue.uuid {
     -webkit-user-select: all;
+    user-select: all;
 }
 
 /* Account actions container. */
@@ -2215,6 +2120,11 @@ input:checked + .toggleSwitchSlider:before {
 /* Main container for the JVM options setting. */
 #settingsJVMOptsContainer {
     width: 75%;
+    margin-top: 20px;
+}
+
+#settingsJVMOptsContainer:last-child {
+    margin-bottom: 20px;
 }
 
 /* JVM options title. */
@@ -2677,7 +2587,7 @@ input:checked + .toggleSwitchSlider:before {
     height: 82vh;
     width: 100%;
     display: flex;
-    -webkit-user-select: initial;
+    user-select: initial;
     position: relative;
 }
 
@@ -2880,7 +2790,7 @@ input:checked + .toggleSwitchSlider:before {
     justify-content: center;
     align-items: center;
     margin-bottom: 10px;
-    -webkit-user-select: none;
+    user-select: none;
     position: absolute;
     bottom: 15px;
     right: 0px;
@@ -2905,7 +2815,7 @@ input:checked + .toggleSwitchSlider:before {
 #newsNavigateLeft:focus #newsNavigationLeftSVG,
 #newsNavigateRight:hover #newsNavigationRightSVG,
 #newsNavigateRight:focus #newsNavigationRightSVG {
-    -webkit-filter: drop-shadow(0px 0px 2px #fff);
+    filter: drop-shadow(0px 0px 2px #fff);
 }
 #newsNavigateLeft:active #newsNavigationLeftSVG .arrowLine,
 #newsNavigateRight:active #newsNavigationRightSVG .arrowLine {
@@ -2913,7 +2823,7 @@ input:checked + .toggleSwitchSlider:before {
 }
 #newsNavigateLeft:active #newsNavigationLeftSVG,
 #newsNavigateRight:active #newsNavigationRightSVG {
-    -webkit-filter: drop-shadow(0px 0px 2px #c7c7c7);
+    filter: drop-shadow(0px 0px 2px #c7c7c7);
 }
 #newsNavigateLeft:disabled #newsNavigationLeftSVG .arrowLine,
 #newsNavigateRight:disabled #newsNavigationRightSVG .arrowLine {
@@ -3125,7 +3035,7 @@ input:checked + .toggleSwitchSlider:before {
     font-weight: bold;
     letter-spacing: 2px;
     background-color: rgba(0, 0, 0, 0.35);
-    -webkit-user-select: none;
+    user-select: none;
     border: none;
     cursor: pointer;
     width: 100%;
@@ -3133,30 +3043,10 @@ input:checked + .toggleSwitchSlider:before {
     border-radius: 50%;
 }
 
-.settingsAuthAccountImageOverlay {
-    opacity: 0;
-    z-index: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: 0.25s ease;
-    font-weight: bold;
-    letter-spacing: 2px;
-    background-color: rgba(0, 0, 0, 0.35);
-    -webkit-user-select: none;
-    border: none;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-}
-
-#avatarOverlay:hover,
-#avatarOverlay:focus,
-.settingsAuthAccountImageOverlay:hover,
-.settingsAuthAccountImageOverlay:focus {
+#avatarOverlay:hover {
     opacity: 1;
 }
-#avatarOverlay:active, .settingsAuthAccountImageOverlay:active {
+#avatarOverlay:active {
     background-color: rgba(0, 0, 0, 0.45);
 }
 
@@ -3170,7 +3060,7 @@ input:checked + .toggleSwitchSlider:before {
     position: absolute;
     right: 95px;
     text-align: right;
-    -webkit-user-select: initial;
+    user-select: initial;
 }
 
 /* Social media icon content container. */
@@ -3352,7 +3242,7 @@ input:checked + .toggleSwitchSlider:before {
 /* Maintains maximum width on the status bar. */
 #server_status_wrapper {
     display: inline-flex;
-    width: 75px;
+    width: max-content;
 }
 
 /* Span which displays the player count of the selected server. */
@@ -3490,12 +3380,14 @@ input:checked + .toggleSwitchSlider:before {
 #newsButton:hover #newsButtonSVG,
 #newsButton:focus #newsButtonSVG {
     -webkit-filter: drop-shadow(0px 0px 2px #fff);
+    filter: drop-shadow(0px 0px 2px #fff);
 }
 #newsButton:active #newsButtonSVG .arrowLine {
     stroke: #c7c7c7;
 }
 #newsButton:active #newsButtonSVG {
     -webkit-filter: drop-shadow(0px 0px 2px #c7c7c7);
+    filter: drop-shadow(0px 0px 2px #c7c7c7);
 }
 #newsButton:disabled #newsButtonSVG .arrowLine {
     stroke: rgba(255, 255, 255, 0.75);
@@ -3623,6 +3515,7 @@ input:checked + .toggleSwitchSlider:before {
     height: 3px;
     width: 265px;
     -webkit-appearance: none;
+    appearance: none;
 }
 #launch_progress[value]::-webkit-progress-bar {
     background-color: transparent;
@@ -3711,6 +3604,7 @@ input:checked + .toggleSwitchSlider:before {
     font-weight: bold;
     letter-spacing: 1px;
     -webkit-user-select: initial;
+    user-select: initial;
 }
 
 /* Overlay description styles. */
@@ -3718,6 +3612,7 @@ input:checked + .toggleSwitchSlider:before {
     font-size: 12px;
     font-weight: bold;
     -webkit-user-select: initial;
+    user-select: initial;
 }
 
 /* Div which contains action buttons. */
@@ -3836,10 +3731,6 @@ input:checked + .toggleSwitchSlider:before {
     cursor: pointer;
     position: relative;
     background: rgba(131, 131, 131, 0.25);
-}
-.serverListing[selected] {
-    cursor: default;
-    opacity: 1.0;
 }
 .serverListing:hover,
 .serverListing:focus {
@@ -3965,7 +3856,8 @@ input:checked + .toggleSwitchSlider:before {
 .serverListingStarTooltip {
     visibility: hidden;
     opacity: 0;
-    width: 65px;
+    width: max-content;
+    padding: 4px;
     background-color: rgba(0, 0, 0, 0.40);
     text-align: center;
     border-radius: 4px;
@@ -4003,7 +3895,8 @@ input:checked + .toggleSwitchSlider:before {
 
 /* Server selection confirm button styles. */
 #serverSelectConfirm,
-#accountSelectConfirm {
+#accountSelectConfirm,
+#accountSelectManage {
     background: none;
     border: 1px solid #ffffff;
     color: white;

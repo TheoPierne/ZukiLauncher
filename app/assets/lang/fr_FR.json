@@ -35,14 +35,28 @@
                     "title": "Erreur lors de la connexion:<br>Erreur inconnue"
                 }
             },
+            "placeholder": {
+                "mojangAccount": "EMAIL OU PSEUDO",
+                "unofficialAccount": "PSEUDO"
+            },
             "login": "CONNEXION",
             "loggingIn": "SE CONNECTER",
             "success": "SUCCÈS",
-            "tryAgain": "Réessayer"
+            "tryAgain": "Réessayer",
+            "mojangAccount": "CONNEXION MOJANG",
+            "unofficialAccount": "CREATION DE COMPTE GRATUIT"
         },
         "landing": {
             "launch": {
                 "pleaseWait": "Patientez..."
+            }
+        },
+        "processbuilder": {
+            "exit": {
+                "exitErrorHeader": "Le jeu s'est arrêté avec un code d'erreur",
+                "message": "Le jeu s'est arrêté de manière anormale avec le code d'erreur suivant :",
+                "copyCode": "Copier le code d'erreur",
+                "copyCodeText": "Code d'erreur Minecraft"
             }
         }
     }

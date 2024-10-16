@@ -1,13 +1,13 @@
 {
-  "name": "mythicallauncher",
-  "version": "1.1.1-alpha",
-  "productName": "Mythical Launcher",
-  "description": "Launcher custom pour le serveur Mythical",
+  "name": "zukipalacelauncher",
+  "version": "1.0.0-alpha.1",
+  "productName": "ZukiPalace Launcher",
+  "description": "Launcher pour le serveur Minecraft de Zukirya",
   "author": "Wouhait (https://github.com/TheoPierne/)",
   "license": "MIT",
-  "homepage": "https://github.com/TheoPierne/MythicalLauncher",
+  "homepage": "https://github.com/TheoPierne/ZukiLauncher",
   "bugs": {
-    "url": "https://github.com/TheoPierne/MythicalLauncher/issues"
+    "url": "https://github.com/TheoPierne/ZukiLauncher/issues"
   },
   "private": true,
   "main": "index.js",
@@ -20,35 +20,35 @@
     "lint": "eslint --config .eslintrc.json ."
   },
   "engines": {
-    "node": "18.x.x"
+    "node": "20.x.x"
   },
   "dependencies": {
-    "@electron/remote": "^2.0.9",
-    "adm-zip": "^0.5.10",
+    "@electron/remote": "^2.1.2",
+    "adm-zip": "^0.5.16",
     "discord-rpc-patch": "^4.0.1",
-    "ejs": "^3.1.9",
-    "ejs-electron": "^2.1.1",
-    "electron-updater": "^5.3.0",
-    "fs-extra": "^11.1.1",
+    "ejs": "^3.1.10",
+    "ejs-electron": "^3.0.0",
+    "electron-updater": "^6.3.9",
+    "fs-extra": "^11.2.0",
     "github-syntax-dark": "^0.5.0",
     "got": "^11.8.5",
-    "helios-core": "~2.0.3",
-    "helios-distribution-types": "^1.2.0",
-    "jquery": "^3.6.4",
-    "jsonwebtoken": "^9.0.0",
-    "minecraft-protocol": "^1.41.2",
+    "helios-core": "~2.2.1",
+    "helios-distribution-types": "^1.3.0",
+    "jquery": "^3.7.1",
+    "jsonwebtoken": "^9.0.2",
+    "minecraft-protocol": "^1.49.0",
     "node-machine-id": "^1.1.12",
     "node-stream-zip": "^1.15.0",
-    "semver": "^7.3.8",
-    "uuid": "^9.0.0"
+    "semver": "^7.6.3",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
-    "electron": "^24.0.0",
-    "electron-builder": "^23.6.0",
-    "eslint": "^8.37.0"
+    "electron": "^33.0.1",
+    "electron-builder": "^25.1.8",
+    "eslint": "^8.57.0"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/TheoPierne/MythicalLauncher.git"
+    "url": "git+https://github.com/TheoPierne/ZukiLauncher.git"
   }
 }

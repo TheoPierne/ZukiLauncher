@@ -2,12 +2,12 @@
 const { LoggerUtil } = require('helios-core')
 const logger = LoggerUtil.getLogger('DiscordWrapper')
 
-const {Client} = require('discord-rpc-patch')
+const { Client } = require('discord-rpc-patch')
 
 let client
 let activity
 
-exports.initRPC = function(genSettings, servSettings, initialDetails = 'En attente du Client..'){
+exports.initRPC = function(genSettings, servSettings, initialDetails = 'En attente du Client..') {
     client = new Client({ transport: 'ipc' })
 
     activity = {
@@ -26,7 +26,7 @@ exports.initRPC = function(genSettings, servSettings, initialDetails = 'En atten
         client.setActivity(activity)
     })
     
-    client.login({clientId: genSettings.clientId}).catch(error => {
+    client.login({ clientId: genSettings.clientId }).catch(error => {
         if(error.message.includes('ENOENT')) {
             logger.info('Unable to initialize Discord Rich Presence, no client detected.')
         } else {

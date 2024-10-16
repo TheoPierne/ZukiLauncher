@@ -14,6 +14,9 @@ const loginUsername = document.getElementById('loginUsername')
 const loginPasswordError = document.getElementById('loginPasswordError')
 const loginPassword = document.getElementById('loginPassword')
 const loginFieldPasswordContainer = document.getElementById('loginFieldPasswordContainer')
+const loginSubheader = document.getElementById('loginSubheader')
+const loginOptions = document.getElementById('loginOptions')
+const loginDisclaimer = document.getElementById('loginDisclaimer')
 const checkmarkContainer = document.getElementById('checkmarkContainer')
 const loginRememberOption = document.getElementById('loginRememberOption')
 const loginButton = document.getElementById('loginButton')
@@ -189,7 +192,7 @@ loginButton.addEventListener('click', () => {
     // Show loading stuff.
     loginLoading(true)
 
-    if(isOfficialLogin){
+    if (isOfficialLogin) {
         AuthManager.addMojangAccount(loginUsername.value, loginPassword.value).then((value) => {
             updateSelectedAccount(value)
             loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.loggingIn'), Lang.queryJS('login.success'))
@@ -236,7 +239,7 @@ loginButton.addEventListener('click', () => {
             })
             toggleOverlay(true)
         })
-    }else{
+    } else {
         AuthManager.addUnofficalAccount(loginUsername.value).then(value => {
             updateSelectedAccount(value)
             loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.loggingIn'), Lang.queryJS('login.success'))
@@ -270,7 +273,7 @@ loginButton.addEventListener('click', () => {
             // Uh oh.
                 msftLoginLogger.error('Unhandled error during login.', displayableError)
                 actualDisplayableError = {
-                    title: 'Erreur inconnue lors de la connexion',
+                    title: 'Erreur inconnue lors de la création du compte',
                     desc: 'Une erreur inconnue s\'est produite. Veuillez consulter la console pour plus de détails.'
                 }
             }

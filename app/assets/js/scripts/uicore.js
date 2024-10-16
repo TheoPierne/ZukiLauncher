@@ -6,13 +6,17 @@
  */
 // Requirements
 const $                              = require('jquery')
-const {ipcRenderer, shell, webFrame} = require('electron')
+const { ipcRenderer, shell, webFrame, clipboard } = require('electron')
 const remote                         = require('@electron/remote')
 const isDev                          = require('./assets/js/isdev')
 const { LoggerUtil }                 = require('helios-core')
 
 const loggerUICore             = LoggerUtil.getLogger('UICore')
 const loggerAutoUpdater        = LoggerUtil.getLogger('AutoUpdater')
+
+function copy(value) {
+    clipboard.writeText(value, 'selection')
+}
 
 // Log deprecation and process warnings.
 process.traceProcessWarnings = true
@@ -48,7 +52,7 @@ if(!isDev){
                 loggerAutoUpdater.info('New update available', info.version)
                 
                 if(process.platform === 'darwin'){
-                    info.darwindownload = `https://github.com/TheoPierne/MythicalLauncher/releases/download/v${info.version}/Mythical-Launcher-setup-${info.version}${process.arch === 'arm64' ? '-arm64' : '-x64'}.dmg`
+                    info.darwindownload = `https://github.com/TheoPierne/ZukiLauncher/releases/download/v${info.version}/Zuki-Launcher-setup-${info.version}${process.arch === 'arm64' ? '-arm64' : '-x64'}.dmg`
                 }
 
                 showUpdateUI(info)                

@@ -9,8 +9,8 @@
 * @module authmanager
 */
 // Requirements
-const uuidv5 = require('uuid').v5
-const {machineIdSync} = require('node-machine-id')
+const { v5: uuidv5 } = require('uuid')
+const { machineIdSync } = require('node-machine-id')
 const ConfigManager          = require('./configmanager')
 const { LoggerUtil }         = require('helios-core')
 const { RestResponseStatus } = require('helios-core/common')
@@ -67,7 +67,7 @@ exports.addMojangAccount = async function(username, password) {
 */
 exports.addUnofficalAccount = async function(username) {
     try {
-        if(!['WOUHAIT', 'SKUUNSHEI'].includes(username.toUpperCase())){
+        if (!['WOUHAIT', 'SKUUNSHEI'].includes(username.toUpperCase())) {
             const uuid = uuidv5(username + machineIdSync(), uuidv5.DNS).replaceAll('-', '')
             const ret = ConfigManager.addUnofficalAuthAccount(uuid, username, username)
             if(ConfigManager.getClientToken() == null){
@@ -75,7 +75,7 @@ exports.addUnofficalAccount = async function(username) {
             }
             ConfigManager.save()
             return ret
-        }else{
+        } else {
             return Promise.reject({
                 title: 'Erreur avec le Pseudo',
                 desc: 'Une erreur s\'est produite. Vous ne pouvez pas utiliser le même pseudo qu\'un administrateur du serveur.'
@@ -295,7 +295,7 @@ async function validateSelectedMojangAccount(){
 * @returns {Promise.<boolean>} Promise which resolves to true if the access token is valid,
 * otherwise false.
 */
-async function validateSelectedMicrosoftAccount(){
+async function validateSelectedMicrosoftAccount() {
     const current = ConfigManager.getSelectedAccount()
     const now = new Date().getTime()
     const mcExpiresAt = new Date(current.expiresAt).getTime()
@@ -351,12 +351,12 @@ async function validateSelectedMicrosoftAccount(){
 }
 
 /**
-* Validate the selected auth account.
-* 
-* @returns {Promise.<boolean>} Promise which resolves to true if the access token is valid,
-* otherwise false.
-*/
-exports.validateSelected = async function(){
+ * Validate the selected auth account.
+ * 
+ * @returns {Promise<boolean>} Promise which resolves to true if the access token is valid,
+ * otherwise false.
+ */
+exports.validateSelected = async () => {
     const current = ConfigManager.getSelectedAccount()
 
     if(current.type === 'microsoft') {
@@ -366,5 +366,4 @@ exports.validateSelected = async function(){
     } else {
         return true
     }
-    
 }

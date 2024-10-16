@@ -1,8 +1,8 @@
 // Requirements
+const fs = require('fs')
 const os = require('os')
 const semver = require('semver')
 
-const SkinManager = require('./assets/js/skinmanager')
 const DropinModUtil = require('./assets/js/dropinmodutil')
 const { MSFT_OPCODE, MSFT_REPLY_TYPE, MSFT_ERROR } = require('./assets/js/ipcconstants')
 
@@ -45,7 +45,7 @@ bindSettingsSelect()
 function bindFileSelectors() {
     for (let ele of document.getElementsByClassName('settingsFileSelButton')) {
 
-        ele.onclick = async e => {
+        ele.onclick = async () => {
             const isJavaExecSel = ele.id === 'settingsJavaExecSel'
             const directoryDialog = ele.hasAttribute('dialogDirectory') && ele.getAttribute('dialogDirectory') == 'true'
             const properties = directoryDialog ? ['openDirectory', 'createDirectory'] : ['openFile']
@@ -60,8 +60,8 @@ function bindFileSelectors() {
 
             if (isJavaExecSel && process.platform === 'win32') {
                 options.filters = [
-                    { name: 'Executables', extensions: ['exe'] },
-                    { name: 'All Files', extensions: ['*'] }
+                    { name: 'Exécutables', extensions: ['exe'] },
+                    { name: 'Tous les fichiers', extensions: ['*'] }
                 ]
             }
 
@@ -75,9 +75,6 @@ function bindFileSelectors() {
         }
     }
 }
-
-bindFileSelectors()
-
 
 /**
  * General Settings Functions
@@ -125,7 +122,7 @@ function initSettingsValidators() {
  */
 async function initSettingsValues() {
     const sEls = document.getElementById('settingsContainer').querySelectorAll('[cValue]')
-    for(const v of sEls) {
+    for (const v of sEls) {
         const cVal = v.getAttribute('cValue')
         const serverDependent = v.hasAttribute('serverDependent') // Means the first argument is the server id.
         const gFn = ConfigManager['get' + cVal]
@@ -156,7 +153,7 @@ async function initSettingsValues() {
                     if (cVal === 'MinRAM' || cVal === 'MaxRAM') {
                         let val = gFn.apply(null, gFnOpts)
                         if (val.endsWith('M')) {
-                            val = Number(val.substring(0, val.length-1))/1024
+                            val = Number(val.substring(0, val.length - 1)) / 1024
                         } else {
                             val = Number.parseFloat(val)
                         }
@@ -216,7 +213,7 @@ function saveSettingsValues() {
                     if (cVal === 'MinRAM' || cVal === 'MaxRAM') {
                         let val = Number(v.getAttribute('value'))
                         if (val % 1 > 0) {
-                            val = val * 1000 + 'M'
+                            val = val * 1024 + 'M'
                         } else {
                             val = val + 'G'
                         }
@@ -344,8 +341,12 @@ const msftLoginLogger = LoggerUtil.getLogger('Microsoft Login')
 const msftLogoutLogger = LoggerUtil.getLogger('Microsoft Logout')
 
 // Bind the add mojang account button.
-document.getElementById('settingsAddMojangAccount').onclick = (e) => {
+document.getElementById('settingsAddMojangAccount').onclick = () => {
     switchView(getCurrentView(), VIEWS.login, 500, 500, () => {
+        loginUsername && (loginUsername.placeholder = Lang.queryJS('login.placeholder.mojangAccount'))
+        loginSubheader && (loginSubheader.innerText = Lang.queryJS('login.mojangAccount'))
+        loginOptions && (loginOptions.style.display = '')
+        loginDisclaimer && (loginDisclaimer.style.display = '')
         loginFieldPasswordContainer && (loginFieldPasswordContainer.style.display = '')
         loginEmailError && (loginEmailError.style.opacity = 0)
         loginPasswordError && (loginPasswordError.style.opacity = 0)
@@ -358,8 +359,12 @@ document.getElementById('settingsAddMojangAccount').onclick = (e) => {
 }
 
 // Bind the add unofficial account button.
-document.getElementById('settingsAddUnofficialAccount').onclick = (e) => {
+document.getElementById('settingsAddUnofficialAccount').onclick = () => {
     switchView(getCurrentView(), VIEWS.login, 500, 500, () => {
+        loginUsername && (loginUsername.placeholder = Lang.queryJS('login.placeholder.unofficialAccount'))
+        loginSubheader && (loginSubheader.innerText = Lang.queryJS('login.unofficialAccount'))
+        loginDisclaimer && (loginDisclaimer.style.display = 'none')
+        loginOptions && (loginOptions.style.display = 'none')
         loginFieldPasswordContainer && (loginFieldPasswordContainer.style.display = 'none')
         loginEmailError && (loginEmailError.style.opacity = 0)
         loginViewOnCancel = VIEWS.settings
@@ -371,7 +376,7 @@ document.getElementById('settingsAddUnofficialAccount').onclick = (e) => {
 }
 
 // Bind the add microsoft account button.
-document.getElementById('settingsAddMicrosoftAccount').onclick = (e) => {
+document.getElementById('settingsAddMicrosoftAccount').onclick = () => {
     switchView(getCurrentView(), VIEWS.waiting, 500, 500, () => {
         ipcRenderer.send(MSFT_OPCODE.OPEN_LOGIN, VIEWS.settings, VIEWS.settings)
     })
@@ -472,7 +477,7 @@ ipcRenderer.on(MSFT_OPCODE.REPLY_LOGIN, (_, ...arguments_) => {
  */
 function bindAuthAccountSelect() {
     Array.from(document.getElementsByClassName('settingsAuthAccountSelect')).map((val) => {
-        val.onclick = (e) => {
+        val.onclick = () => {
             if (val.hasAttribute('selected')) {
                 return
             }
@@ -497,14 +502,32 @@ function bindAuthAccountSelect() {
  */
 function bindAuthAccountLogOut() {
     Array.from(document.getElementsByClassName('settingsAuthAccountLogOut')).map((val) => {
-        val.onclick = (e) => {
+        val.onclick = () => {
             let isLastAccount = false
+            const parent = val.closest('.settingsAuthAccount')
+            const uuid = parent.getAttribute('uuid')
+            const targetAcc = ConfigManager.getAuthAccount(uuid)
             if (Object.keys(ConfigManager.getAuthAccounts()).length === 1) {
                 isLastAccount = true
                 setOverlayContent(
                     'Avertissement<br>Ceci est votre dernier compte',
-                    'Pour utiliser le lanceur, vous devez être connecté à au moins un compte. Vous devrez vous reconnecter après.<br><br>Voulez-vous vraiment vous déconnecter ?',
+                    'Pour utiliser ce launcher, vous devez être connecté à au moins un compte. Vous devrez vous reconnecter après.<br><br>Voulez-vous vraiment vous déconnectez ?',
                     'Je suis sûr',
+                    'Annuler'
+                )
+                setOverlayHandler(() => {
+                    processLogOut(val, isLastAccount)
+                    toggleOverlay(false)
+                })
+                setDismissHandler(() => {
+                    toggleOverlay(false)
+                })
+                toggleOverlay(true, true)
+            } else if (targetAcc.type === 'unofficial') {
+                setOverlayContent(
+                    'Avertissement<br>Ceci est un compte gratuit',
+                    'Si vous le supprimez, vous n\'aurez plus votre avancée sur le serveur (inventaire, succès, ...)',
+                    'Continuer',
                     'Annuler'
                 )
                 setOverlayHandler(() => {
@@ -637,46 +660,6 @@ ipcRenderer.on(MSFT_OPCODE.REPLY_LOGOUT, (_, ...arguments_) => {
     }
 })
 
-function bindSkinChange() {
-    Array.from(document.getElementsByClassName('settingsAuthAccountImageOverlay')).map(val => {
-        val.onclick = async () => {
-            const uuid = val.closest('[uuid]').getAttribute('uuid')
-            const account = ConfigManager.getAuthAccount(uuid)
-
-            if (account) {
-
-                const skinFileInput = document.getElementById('skin')
-
-                if (skinFileInput.files.length === 1) {
-                    const isOk = SkinManager.generateSkinFile(account, skinFileInput.files[0]);
-                    if (isOk) {
-                        const skinData = ConfigManager.getSkinData(uuid);
-                        if (skinData) {
-                            console.log(skinData)
-                        }
-                    }
-                }
-
-                //SkinManager.generateSkinFile(uuid, account.username)
-                /*setOverlayContent(
-                   'Avertissement<br>Ceci est votre dernier compte',
-                   'Pour utiliser le lanceur, vous devez être connecté à au moins un compte. Vous devrez vous reconnecter après.<br><br>Voulez-vous vraiment vous déconnecter ?',
-                   'Je suis sûr',
-                   'Annuler'
-               )
-               setOverlayHandler(() => {
-                   processLogOut(val, isLastAccount)
-                   toggleOverlay(false)
-               })
-               setDismissHandler(() => {
-                   toggleOverlay(false)
-               })
-               toggleOverlay(true, true)*/
-            }
-        }
-    })
-}
-
 /**
  * Refreshes the status of the selected account on the auth account
  * elements.
@@ -720,62 +703,32 @@ function populateAuthAccounts() {
     authKeys.forEach((val) => {
         const acc = authAccounts[val]
 
-        const accHtml = `<div class="settingsAuthAccount" uuid="${acc.uuid}">
-         <div class="settingsAuthAccountContainer">
-         <div class="settingsAuthAccountLeft">
-         ${acc.type === "unofficial" ?
-                `<div class="settingsAuthAccountImageContainer" style="background-image: url('https://mc-heads.net/body/${acc.uuid}/60');">
-         <button class="settingsAuthAccountImageOverlay">Éditer</button>
-         </div>` :
-                `<img class="settingsAuthAccountImage" alt="${acc.displayName}" src="https://mc-heads.net/body/${acc.uuid}/60">`
-            }
-     </div>
-     <div class="settingsAuthAccountRight">
-     <div class="settingsAuthAccountDetails">
-     <div class="settingsAuthAccountDetailPane">
-     <div class="settingsAuthAccountDetailTitle">Pseudo</div>
-     <div class="settingsAuthAccountDetailValue">${acc.displayName}</div>
-     </div>
-     <div class="settingsAuthAccountDetailPane">
-     <div class="settingsAuthAccountDetailTitle">UUID</div>
-     <div class="settingsAuthAccountDetailValue uuid">${acc.uuid}</div>
-     </div>
-     </div>
-     <div class="settingsAuthAccountActions">
-     <button class="settingsAuthAccountSelect" ${selectedUUID === acc.uuid ? 'selected>Compte sélectionné &#10004;' : '>Sélectionnez ce compte'}</button>
-     <div class="settingsAuthAccountWrapper">
-     <button class="settingsAuthAccountLogOut">Se déconnecter</button>
-     </div>
-     </div>
-     </div>
-     </div>
-     ${acc.type === 'unofficial' ?
-                `<div class="settingsAuthAccountSkinEditor">
-     <div class="skinEditor">
-         <img class="settingsAuthAccountSkinViewer" src="https://mc-heads.net/body/${acc.uuid}/60">
-         <div class="settingsAuthAccountSkinInfo">
-             <p>Modèle du skin: </p>
-             <div class="radiogroup">
-             <div class="skinVariantInput">
-                 <input class="state" type="radio" name="app" id="classic" value="classic" checked>
-                 <label class="label" for="classic">
-                    <div class="indicator"></div>
-                    <span class="text">Classic</span>
-                 </label>
-             </div>
-             <div class="skinVariantInput">
-                 <input class="state" type="radio" name="app" id="slim" value="slim">
-                 <label class="label" for="slim">
-                    <div class="indicator"></div>
-                    <span class="text">Slim</span>
-                 </label>
-             </div>
-             </div>
-         </div>
-     </div>
-     <input type="file" id="skin" name="skin" accept="image/png">
-     </div>` : ''}
-     </div>`
+        const accHtml = `
+        <div class="settingsAuthAccount" uuid="${acc.uuid}">
+            <div class="settingsAuthAccountContainer">
+                <div class="settingsAuthAccountLeft">
+                    <img class="settingsAuthAccountImage" alt="${acc.displayName}" src="https://mc-heads.net/body/${acc.uuid}/60">
+                </div>
+                <div class="settingsAuthAccountRight">
+                    <div class="settingsAuthAccountDetails">
+                        <div class="settingsAuthAccountDetailPane">
+                            <div class="settingsAuthAccountDetailTitle">Pseudo</div>
+                            <div class="settingsAuthAccountDetailValue">${acc.displayName}</div>
+                        </div>
+                        <div class="settingsAuthAccountDetailPane">
+                            <div class="settingsAuthAccountDetailTitle">UUID</div>
+                            <div class="settingsAuthAccountDetailValue uuid">${acc.uuid}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="settingsAuthAccountActions">
+                    <button class="settingsAuthAccountSelect" ${selectedUUID === acc.uuid ? 'selected>Compte sélectionné &#10004;' : '>Sélectionnez ce compte'}</button>
+                    <div class="settingsAuthAccountWrapper">
+                        <button class="settingsAuthAccountLogOut">${acc.type === 'unofficial' ? 'Supprimer' : 'Se déconnecter'}</button>
+                    </div>
+                </div>
+            </div>
+        </div>`
 
         if (acc.type === 'microsoft') {
             microsoftAuthAccountStr += accHtml
@@ -790,32 +743,11 @@ function populateAuthAccounts() {
     settingsCurrentMicrosoftAccounts.innerHTML = microsoftAuthAccountStr
     settingsCurrentMojangAccounts.innerHTML = mojangAuthAccountStr
     settingsCurrentUnofficialAccounts.innerHTML = unofficalAccountStr
+
+    bindFileSelectors()
 }
 
-let view;
-
-function buildSkinViewer() {
-    const skinview = require('./assets/js/skinview');
-    const skinFileInput = document.getElementById('skin');
-    const skinViewerImg = document.querySelector('.settingsAuthAccountSkinViewer');
-
-    skinFileInput.onchange = () => {
-        const [file] = skinFileInput.files;
-
-        if (file) {
-            const url = window.URL.createObjectURL(file);
-
-            skinview.drawModel(url, 3, true, true, false, (err, skin) => {
-                if (err) {
-                    console.error(err);
-                }
-
-                window.URL.revokeObjectURL(url);
-                skinViewerImg.src = skin;
-            });
-        }
-    }
-}
+let view
 
 /**
  * Prepare the accounts tab for display.
@@ -824,8 +756,7 @@ function prepareAccountsTab() {
     populateAuthAccounts()
     bindAuthAccountSelect()
     bindAuthAccountLogOut()
-    bindSkinChange()
-    buildSkinViewer()
+    bindFileSelectors()
 }
 
 /**
@@ -836,12 +767,12 @@ function prepareAccountsTab() {
   * Disable decimals, negative signs, and scientific notation.
   */
 document.getElementById('settingsGameWidth').addEventListener('keydown', (e) => {
-    if (/^[-.eE]$/.test(e.key)) {
+    if (/^[-.,eE]$/.test(e.key)) {
         e.preventDefault()
     }
 })
 document.getElementById('settingsGameHeight').addEventListener('keydown', (e) => {
-    if (/^[-.eE]$/.test(e.key)) {
+    if (/^[-.,eE]$/.test(e.key)) {
         e.preventDefault()
     }
 })
@@ -881,7 +812,12 @@ function parseModulesForUI(mdls, submodules, servConf) {
 
     for (const mdl of mdls) {
 
-        if (mdl.rawModule.type === Type.ForgeMod || mdl.rawModule.type === Type.LiteMod || mdl.rawModule.type === Type.LiteLoader) {
+        if (
+            mdl.rawModule.type === Type.ForgeMod ||
+            mdl.rawModule.type === Type.LiteMod ||
+            mdl.rawModule.type === Type.LiteLoader ||
+            mdl.rawModule.type === Type.FabricMod
+        ) {
 
             if (mdl.getRequired().value) {
 
@@ -1234,7 +1170,7 @@ async function loadSelectedServerOnModsTab() {
          <path class="cls-1" d="M100.93,65.54C89,62,68.18,55.65,63.54,52.13c2.7-5.23,18.8-19.2,28-27.55C81.36,31.74,63.74,43.87,58.09,45.3c-2.41-5.37-3.61-26.52-4.37-39-.77,12.46-2,33.64-4.36,39-5.7-1.46-23.3-13.57-33.49-20.72,9.26,8.37,25.39,22.36,28,27.55C39.21,55.68,18.47,62,6.52,65.55c12.32-2,33.63-6.06,39.34-4.9-.16,5.87-8.41,26.16-13.11,37.69,6.1-10.89,16.52-30.16,21-33.9,4.5,3.79,14.93,23.09,21,34C70,86.84,61.73,66.48,61.59,60.65,67.36,59.49,88.64,63.52,100.93,65.54Z"/>
          <circle class="cls-2" cx="53.73" cy="53.9" r="38"/>
          </svg>
-         <span class="serverListingStarTooltip">Main Server</span>
+         <span class="serverListingStarTooltip">Serveur principal</span>
          </div>` : ''}
          </div>
          </div>    
@@ -1309,7 +1245,7 @@ settingsMinRAMRange.onchange = (e) => {
     // Get reference to range bar.
     const bar = e.target.getElementsByClassName('rangeSliderBar')[0]
     // Calculate effective total memory.
-    const max = os.totalmem()/1073741824
+    const max = os.totalmem() / 1073741824
 
     // Change range bar color based on the selected value.
     if (sMinV >= max / 2) {
@@ -1341,7 +1277,7 @@ settingsMaxRAMRange.onchange = (e) => {
     // Get reference to range bar.
     const bar = e.target.getElementsByClassName('rangeSliderBar')[0]
     // Calculate effective total memory.
-    const max = os.totalmem()/1073741824
+    const max = os.totalmem() / 1073741824
 
     // Change range bar color based on the selected value.
     if (sMaxV >= max / 2) {
@@ -1469,8 +1405,8 @@ function updateRangedSlider(element, value, notch) {
  * Display the total and available RAM.
  */
 function populateMemoryStatus() {
-    settingsMemoryTotal.innerHTML = Number((os.totalmem()-1073741824)/1073741824).toFixed(1) + 'G'
-    settingsMemoryAvail.innerHTML = Number(os.freemem()/1073741824).toFixed(1) + 'G'
+    settingsMemoryTotal.innerHTML = Number((os.totalmem() - 1073741824) / 1073741824).toFixed(1) + 'G'
+    settingsMemoryAvail.innerHTML = Number(os.freemem() / 1073741824).toFixed(1) + 'G'
 }
 
 /**
@@ -1479,14 +1415,14 @@ function populateMemoryStatus() {
  * 
  * @param {string} execPath The executable path to populate against.
  */
-async function populateJavaExecDetails(execPath){
+async function populateJavaExecDetails(execPath) {
     const server = (await DistroAPI.getDistribution()).getServerById(ConfigManager.getSelectedServer())
     const details = await validateSelectedJvm(ensureJavaDirIsRoot(execPath), server.effectiveJavaOptions.supported)
 
-    if(details != null) {
-        settingsJavaExecDetails.innerHTML = `Selected: Java ${details.semverStr} (${details.vendor})`
+    if (details != null) {
+        settingsJavaExecDetails.innerHTML = `Sélectionnée: Java ${details.semverStr} (${details.vendor})`
     } else {
-        settingsJavaExecDetails.innerHTML = 'Invalid Selection'
+        settingsJavaExecDetails.innerHTML = 'Selection invalide'
     }
 }
 
@@ -1497,12 +1433,12 @@ function populateJavaReqDesc(server) {
 function populateJvmOptsLink(server) {
     const major = server.effectiveJavaOptions.suggestedMajor
     settingsJvmOptsLink.innerHTML = `Options disponibles pour Java ${major} (HotSpot VM)`
-    
+
     if (major >= 12) {
         settingsJvmOptsLink.href = `https://docs.oracle.com/en/java/javase/${major}/docs/specs/man/java.html#extra-options-for-java`
-    } else if(major >= 11) {
+    } else if (major >= 11) {
         settingsJvmOptsLink.href = 'https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-3B1CE181-CD30-4178-9602-230B800D4FAE'
-    } else if(major >= 9) {
+    } else if (major >= 9) {
         settingsJvmOptsLink.href = `https://docs.oracle.com/javase/${major}/tools/java.htm`
     } else {
         settingsJvmOptsLink.href = `https://docs.oracle.com/javase/${major}/docs/technotes/tools/${process.platform === 'win32' ? 'windows' : 'unix'}/java.html`
@@ -1594,7 +1530,7 @@ function populateAboutVersionInformation() {
  */
 function populateReleaseNotes() {
     $.ajax({
-        url: 'https://github.com/TheoPierne/MythicalLauncher/releases.atom',
+        url: 'https://github.com/TheoPierne/ZukiLauncher/releases.atom',
         success: (data) => {
             const version = 'v' + remote.app.getVersion()
             const entries = $(data).find('entry')

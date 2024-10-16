@@ -236,7 +236,7 @@ function createTray () {
     tray = new Tray(trayicon)
     const contextMenu = Menu.buildFromTemplate([
         {
-            label: 'Mythical Launcher', 
+            label: 'ZukiPalace Launcher', 
             type: 'normal', 
             enabled: false, 
             icon: trayicon.resize({ width: 16 })
@@ -267,7 +267,7 @@ function createTray () {
     ])
 
     tray.setContextMenu(contextMenu)
-    tray.setToolTip('Mythical Launcher')
+    tray.setToolTip('ZukiPalace Launcher')
 
     tray.on('click', () => {
         if(win){

@@ -178,7 +178,7 @@ function syncModConfigurations(data){
             for(let mdl of mdls){
                 const type = mdl.rawModule.type
 
-                if(type === Type.ForgeMod || type === Type.LiteMod || type === Type.LiteLoader){
+                if(type === Type.ForgeMod || type === Type.LiteMod || type === Type.LiteLoader || type === Type.FabricMod){
                     if(!mdl.getRequired().value){
                         const mdlID = mdl.getVersionlessMavenIdentifier()
                         if(modsOld[mdlID] == null){
@@ -213,7 +213,7 @@ function syncModConfigurations(data){
 
             for(let mdl of mdls){
                 const type = mdl.rawModule.type
-                if(type === Type.ForgeMod || type === Type.LiteMod || type === Type.LiteLoader){
+                if(type === Type.ForgeMod || type === Type.LiteMod || type === Type.LiteLoader || type === Type.FabricMod){
                     if(!mdl.getRequired().value){
                         mods[mdl.getVersionlessMavenIdentifier()] = scanOptionalSubModules(mdl.subModules, mdl)
                     } else {
@@ -268,7 +268,7 @@ function scanOptionalSubModules(mdls, origin){
         for(let mdl of mdls){
             const type = mdl.rawModule.type
             // Optional types.
-            if(type === Type.ForgeMod || type === Type.LiteMod || type === Type.LiteLoader){
+            if(type === Type.ForgeMod || type === Type.LiteMod || type === Type.LiteLoader || type === Type.FabricMod){
                 // It is optional.
                 if(!mdl.getRequired().value){
                     mods[mdl.getVersionlessMavenIdentifier()] = scanOptionalSubModules(mdl.subModules, mdl)

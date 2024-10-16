@@ -44,6 +44,14 @@
             "launch": {
                 "pleaseWait": "Please wait.."
             }
+        },
+        "processbuilder": {
+            "exit": {
+                "exitErrorHeader": "Game exited with an error code",
+                "message": "The game exited abnormally with the exited code: ",
+                "copyCode": "Copy exit code",
+                "copyCodeText": "Minecraft exit code"
+            }
         }
     }
 }

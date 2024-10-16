@@ -1,10 +1,10 @@
 <p align="center"><img src="./app/assets/images/SealCircle.png" width="150px" height="150px" alt="aventium softworks"></p>
 
-<h1 align="center">Mythical Launcher</h1>
+<h1 align="center">ZukiPalace Launcher</h1>
 
 <em><h5 align="center">(formerly Electron Launcher)</h5></em>
 
-[<p align="center"><img src="https://img.shields.io/github/actions/workflow/status/TheoPierne/MythicalLauncher/build.yml?branch=main&style=for-the-badge" alt="gh actions">](https://github.com/TheoPierne/MythicalLauncher/actions) [<img src="https://img.shields.io/github/downloads/TheoPierne/MythicalLauncher/total.svg?style=for-the-badge" alt="downloads">](https://github.com/TheoPierne/MythicalLauncher/releases) <img src="./app/assets/images/icons/mythical-s3.svg"  height="28px" alt="mythical-saison-3"></p>
+[<p align="center"><img src="https://img.shields.io/github/actions/workflow/status/TheoPierne/ZukiLauncher/build.yml?branch=main&style=for-the-badge" alt="gh actions">](https://github.com/TheoPierne/ZukiLauncher/actions) [<img src="https://img.shields.io/github/downloads/TheoPierne/ZukiLauncher/total.svg?style=for-the-badge" alt="downloads">](https://github.com/TheoPierne/ZukiLauncher/releases)
 
 <p align="center">Join modded servers without worrying about installing Java, Forge, or other mods. We'll handle that for you.</p>
 
@@ -39,25 +39,25 @@ This is not an exhaustive list. Download and install the launcher to gauge all i
 
 ## Downloads
 
-You can download from [GitHub Releases](https://github.com/TheoPierne/MythicalLauncher/releases)
+You can download from [GitHub Releases](https://github.com/TheoPierne/ZukiLauncher/releases)
 
 #### Latest Release
 
-[![](https://img.shields.io/github/release/TheoPierne/MythicalLauncher.svg?style=flat-square)](https://github.com/TheoPierne/MythicalLauncher/releases/latest)
+[![](https://img.shields.io/github/release/TheoPierne/ZukiLauncher.svg?style=flat-square)](https://github.com/TheoPierne/ZukiLauncher/releases/latest)
 
 #### Latest Pre-Release
-[![](https://img.shields.io/github/release/TheoPierne/MythicalLauncher/all.svg?style=flat-square)](https://github.com/TheoPierne/MythicalLauncher/releases)
+[![](https://img.shields.io/github/release/TheoPierne/ZukiLauncher/all.svg?style=flat-square)](https://github.com/TheoPierne/ZukiLauncher/releases)
 
 **Supported Platforms**
 
-If you download from the [Releases](https://github.com/TheoPierne/MythicalLauncher/releases) tab, select the installer for your system.
+If you download from the [Releases](https://github.com/TheoPierne/ZukiLauncher/releases) tab, select the installer for your system.
 
 | Platform | File |
 | -------- | ---- |
-| Windows x64 | `Mythical-Launcher-setup-VERSION.exe` |
-| macOS x64 | `Mythical-Launcher-setup-VERSION-x64.dmg` |
-| macOS arm64 | `Mythical-Launcher-setup-VERSION-arm64.dmg` |
-| Linux x64 | `Mythical-Launcher-setup-VERSION.AppImage` |
+| Windows x64 | `ZukiPalace-Launcher-setup-VERSION.exe` |
+| macOS x64 | `ZukiPalace-Launcher-setup-VERSION-x64.dmg` |
+| macOS arm64 | `ZukiPalace-Launcher-setup-VERSION-arm64.dmg` |
+| Linux x64 | `ZukiPalace-Launcher-setup-VERSION.AppImage` |
 
 ## Console
 

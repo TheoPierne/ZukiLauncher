@@ -7,7 +7,7 @@ const logger = LoggerUtil.getLogger('ConfigManager')
 
 const sysRoot = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME)
 
-const dataPath = path.join(sysRoot, '.mythicallauncher')
+const dataPath = path.join(sysRoot, '.zukipalacelauncher')
 
 const launcherDir = require('@electron/remote').app.getPath('userData')
 
@@ -367,32 +367,8 @@ exports.addUnofficalAuthAccount = function(uuid, username, displayName){
         accessToken: '00000000000000000000000000000000',
         username: username.trim(),
         uuid: uuid.trim(),
-        displayName: displayName.trim(),
-        skin: {}
+        displayName: displayName.trim()
     }
-    return config.authenticationDatabase[uuid]
-}
-
-/**
- * Get the current data skin for a player.
- * @param  {string} uuid The uuid of the unofficial account.
- * @return {Object|null}
- */
-exports.getSkinData = (uuid) => {
-    return config.authenticationDatabase[uuid]?.skin ?? null
-}
-
-/**
- * Modify the skin of an unofficial account.
- * 
- * @param  {string} uuid The uuid of the unofficial account.
- * @param  {Object} skinData The object containing the data of the skin.
- * @return {Object
- */
-exports.updateSkin = (uuid, skinData) => {
-    config.authenticationDatabase[uuid].skin.skinFilePath = skinData.path
-    config.authenticationDatabase[uuid].skin.url = skinData.url
-    config.authenticationDatabase[uuid].skin.variant = skinData.variant
     return config.authenticationDatabase[uuid]
 }
 
