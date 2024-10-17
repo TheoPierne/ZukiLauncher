@@ -3206,10 +3206,26 @@ input:checked + .toggleSwitchSlider:before {
 /* Discord icon colors. */
 #discordSVG:hover,
 #discordURL:focus #discordSVG {
-    fill: #7288d9;
+    fill: #5865F2;
 }
 #discordSVG:active {
-    fill: #657ac4;
+    fill: #5865F2;
+}
+
+/* Twitch icon colors */
+#twitchSVG:hover .st0,
+#twitchURL:focus #twitchSVG.st0 {
+    fill: #FFF;
+}
+#twitchSVG:active {
+    fill: #FFF;
+}
+#twitchSVG:hover .st1,
+#twitchURL:focus #twitchSVG.st1 {
+    fill: #9146FF;
+}
+#twitchSVG:active {
+    fill: #9146FF;
 }
 
 /*******************************************************************************
