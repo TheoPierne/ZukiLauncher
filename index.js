@@ -308,10 +308,6 @@ function createWindow() {
 
     win.loadURL(pathToFileURL(path.join(__dirname, 'app', 'app.ejs')).toString())
 
-    /*win.once('ready-to-show', () => {
-        win.show()
-    })*/
-
     win.webContents.on('new-window', event => {
         event.preventDefault()
     })
@@ -321,7 +317,7 @@ function createWindow() {
     win.resizable = true
 
     win.on('close', e => {
-        if(isGameLaunch){
+        if (isGameLaunch) {
             e.preventDefault()
             win.hide()
         }
@@ -419,11 +415,11 @@ app.on('window-all-closed', () => {
     // On macOS it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
     if (process.platform !== 'darwin') {
-        if(!isGameLaunch){
-            if(!minimizeOnClose){
+        if (!isGameLaunch) {
+            if (!minimizeOnClose) {
                 app.quit()
             }
-        }else{
+        } else {
             win && win.hide()
         }
     }

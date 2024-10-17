@@ -294,7 +294,7 @@ body, button {
     text-shadow: white 0px 0px 0px;
 }
 
-#welcomeDescription {
+.welcomeDescription {
     text-align: justify;
     font-size: 13px;
     font-weight: 100;
