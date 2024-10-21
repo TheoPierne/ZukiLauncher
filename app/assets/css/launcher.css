@@ -2718,7 +2718,9 @@ input:checked + .toggleSwitchSlider:before {
     padding: 0px 15px 0px 15px;
 }
 #newsArticleContentScrollable img,
-#newsArticleContentScrollable iframe {
+#newsArticleContentScrollable iframe,
+#newsArticleContentScrollable video {
+    object-fit: contain;
     max-width: 95%;
     display: block;
     margin: 0 auto;
@@ -2773,6 +2775,14 @@ input:checked + .toggleSwitchSlider:before {
 
 #newsArticleContentWrapper {
     width: 80%;
+}
+
+#newsArticleContentWrapper .emoji {
+    display: inline;
+    object-fit: contain;
+    vertical-align: bottom;
+    height: 1.375em;
+    width: 1.375em;
 }
 
 .newsArticleSpacerTop {

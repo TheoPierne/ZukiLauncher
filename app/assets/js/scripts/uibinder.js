@@ -5,7 +5,7 @@
 // Requirements
 const path          = require('path')
 const { Type }      = require('helios-distribution-types')
-const {readdirSync} = require('fs')        
+const { readdirSync } = require('fs')        
 
 const AuthManager   = require('./assets/js/authmanager')
 const ConfigManager = require('./assets/js/configmanager')

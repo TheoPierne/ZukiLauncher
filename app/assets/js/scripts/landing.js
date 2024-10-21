@@ -2,11 +2,10 @@
  * Script for landing.ejs
  */
 // Requirements
-const cp = require('child_process')
 const crypto = require('crypto')
 const { URL } = require('url')
 const { MojangRestAPI, getServerStatus } = require('helios-core/mojang')
-const { RestResponseStatus, isDisplayableError, validateLocalFile } = require('helios-core/common')
+const { RestResponseStatus, validateLocalFile } = require('helios-core/common')
 const { FullRepair, DistributionIndexProcessor, MojangIndexProcessor, downloadFile } = require('helios-core/dl')
 const {
     validateSelectedJvm,
@@ -935,7 +934,7 @@ document.addEventListener('keydown', (e) => {
 function displayArticle(articleObject, index) {
     newsArticleTitle.innerHTML = articleObject.title
     newsArticleTitle.href = articleObject.link
-    newsArticleAuthor.innerHTML = 'by ' + articleObject.author
+    newsArticleAuthor.innerHTML = 'par ' + articleObject.author
     newsArticleDate.innerHTML = articleObject.date
     newsArticleComments.innerHTML = articleObject.comments
     newsArticleComments.href = articleObject.commentsLink
@@ -968,6 +967,7 @@ async function loadNews() {
         const newsHost = new URL(newsFeed).origin + '/'
         $.ajax({
             url: newsFeed,
+            cache: false,
             success: (data) => {
                 const items = $(data).find('item')
                 const articles = []
@@ -977,7 +977,7 @@ async function loadNews() {
                     const el = $(items[i])
 
                     // Resolve date.
-                    const date = new Date(el.find('pubDate').text()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' })
+                    const date = new Date(el.find('pubDate').text()).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' })
 
                     // Resolve comments.
                     let comments = el.find('slash\\:comments').text() || '0'
