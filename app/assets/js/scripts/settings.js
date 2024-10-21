@@ -1,5 +1,4 @@
 // Requirements
-const fs = require('fs')
 const os = require('os')
 const semver = require('semver')
 
@@ -1535,12 +1534,12 @@ function populateReleaseNotes() {
             const version = 'v' + remote.app.getVersion()
             const entries = $(data).find('entry')
 
-            for (let i = 0; i < entries.length; i++) {
+            for (let i = 0, entriesLength = entries.length; i < entriesLength; i++) {
                 const entry = $(entries[i])
                 let id = entry.find('id').text()
                 id = id.substring(id.lastIndexOf('/') + 1)
 
-                if (id === version) {
+                if (version.includes(id)) {
                     settingsAboutChangelogTitle.innerHTML = entry.find('title').text()
                     settingsAboutChangelogText.innerHTML = entry.find('content').text()
                     settingsAboutChangelogButton.href = entry.find('link').attr('href')
@@ -1549,7 +1548,7 @@ function populateReleaseNotes() {
 
         },
         timeout: 2500
-    }).catch(err => {
+    }).catch(() => {
         settingsAboutChangelogText.innerHTML = 'Échec du chargement des notes de version.'
     })
 }
