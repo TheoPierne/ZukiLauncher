@@ -139,7 +139,7 @@ ipcMain.on(MSFT_OPCODE.OPEN_LOGIN, (ipcEvent, ...arguments_) => {
         width: 520,
         height: 600,
         frame: true,
-        icon: getPlatformIcon('SealCircle')
+        icon: getPlatformIcon('ZukiLogo')
     })
 
     msftAuthWindow.on('closed', () => {
@@ -192,7 +192,7 @@ ipcMain.on(MSFT_OPCODE.OPEN_LOGOUT, (ipcEvent, uuid, isLastAccount) => {
         width: 520,
         height: 600,
         frame: true,
-        icon: getPlatformIcon('SealCircle')
+        icon: getPlatformIcon('ZukiLogo')
     })
 
     msftLogoutWindow.on('closed', () => {
@@ -231,7 +231,7 @@ ipcMain.on(MSFT_OPCODE.OPEN_LOGOUT, (ipcEvent, uuid, isLastAccount) => {
 
 let tray = null
 function createTray () {
-    const icon = getPlatformIcon('SealCircle') // required.
+    const icon = getPlatformIcon('ZukiLogo') // required.
     const trayicon = nativeImage.createFromPath(icon)
     tray = new Tray(trayicon)
     const contextMenu = Menu.buildFromTemplate([
@@ -291,7 +291,7 @@ function createWindow() {
     win = new BrowserWindow({
         width: 980,
         height: 552,
-        icon: getPlatformIcon('SealCircle'),
+        icon: getPlatformIcon('ZukiLogo'),
         frame: false,
         webPreferences: {
             disableBlinkFeatures: 'Auxclick',
