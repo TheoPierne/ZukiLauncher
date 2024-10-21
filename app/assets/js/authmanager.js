@@ -63,11 +63,11 @@ exports.addMojangAccount = async function(username, password) {
 * configuration database.
 * 
 * @param {string} username The account username.
-* @returns {Promise.<Object>} Promise which resolves the resolved authenticated account object.
+* @returns {Promise<Object>} Promise which resolves the resolved authenticated account object.
 */
 exports.addUnofficalAccount = async function(username) {
     try {
-        if (!['WOUHAIT', 'SKUUNSHEI'].includes(username.toUpperCase())) {
+        if (!['WOUHAIT', 'KNIGHTKENOBI_'].includes(username.toUpperCase())) {
             const uuid = uuidv5(username + machineIdSync(), uuidv5.DNS).replaceAll('-', '')
             const ret = ConfigManager.addUnofficalAuthAccount(uuid, username, username)
             if(ConfigManager.getClientToken() == null){
@@ -325,7 +325,7 @@ async function validateSelectedMicrosoftAccount() {
             )
             ConfigManager.save()
             return true
-        } catch(err) {
+        } catch(e) {
             return false
         }
     } else {
@@ -344,7 +344,7 @@ async function validateSelectedMicrosoftAccount() {
             ConfigManager.save()
             return true
         }
-        catch(err) {
+        catch(e) {
             return false
         }
     }
