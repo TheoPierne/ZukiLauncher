@@ -2,7 +2,7 @@ const { DistributionAPI } = require('helios-core/common')
 
 const ConfigManager = require('./configmanager')
 
-exports.REMOTE_DISTRO_URL = 'https://raw.githubusercontent.com/TheoPierne/theopierne.github.io/main/zuki-launcher/distribution.json'
+exports.REMOTE_DISTRO_URL = 'http://51.77.201.23/zuki-launcher/distribution.json'
 
 const api = new DistributionAPI(
     ConfigManager.getLauncherDirectory(),
