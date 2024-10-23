@@ -268,7 +268,7 @@ function showLaunchFailure(title, desc) {
     setOverlayContent(
         title,
         desc,
-        'Okay'
+        'Ok'
     )
     setOverlayHandler(null)
     toggleOverlay(true)
@@ -540,6 +540,13 @@ async function dlAsync(login = true) {
 
     if (login) {
         const authUser = ConfigManager.getSelectedAccount()
+
+        if (authUser.type === 'unofficial' && ['WOUHAIT', 'KNIGHTKENOBI_'].includes(authUser.username)) {
+            loggerLaunchSuite.error('Trying to start the game with a free moderator account.')
+            showLaunchFailure('Minecraft n\'a pas pu démarrer correctement.', 'Votre compte gratuit utilise le pseudo d\'un modérateur en jeu. Pour des raisons de sécurité vous n\'êtes pas autorisé à utiliser le même pseudo qu\'un modérateur en jeu.')
+            return
+        }
+
         loggerLaunchSuite.info(`Sending selected account (${authUser.displayName}) to ProcessBuilder.`)
         let pb = new ProcessBuilder(serv, versionData, modLoaderData, authUser, remote.app.getVersion())
         setLaunchDetails('Lancement du jeu..')
@@ -607,8 +614,6 @@ async function dlAsync(login = true) {
             })
 
             setLaunchDetails('Terminé. Bon jeu !')
-
-            console.log(distro, serv)
 
             // Init Discord Hook
             if (distro.rawDistribution.discord != null && serv.rawServer.discord != null) {
