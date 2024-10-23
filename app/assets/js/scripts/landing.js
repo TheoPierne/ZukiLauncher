@@ -5,7 +5,7 @@
 const crypto = require('crypto')
 const { URL } = require('url')
 const { MojangRestAPI, getServerStatus } = require('helios-core/mojang')
-const { RestResponseStatus, validateLocalFile } = require('helios-core/common')
+const { RestResponseStatus, isDisplayableError, validateLocalFile } = require('helios-core/common')
 const { FullRepair, DistributionIndexProcessor, MojangIndexProcessor, downloadFile } = require('helios-core/dl')
 const {
     validateSelectedJvm,
