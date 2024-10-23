@@ -14,13 +14,120 @@ const { machineIdSync } = require('node-machine-id')
 const ConfigManager          = require('./configmanager')
 const { LoggerUtil }         = require('helios-core')
 const { RestResponseStatus } = require('helios-core/common')
-const { MojangRestAPI, mojangErrorDisplayable, MojangErrorCode } = require('helios-core/mojang')
-const { MicrosoftAuth, microsoftErrorDisplayable, MicrosoftErrorCode } = require('helios-core/microsoft')
+const { MojangRestAPI, MojangErrorCode } = require('helios-core/mojang')
+const { MicrosoftAuth, MicrosoftErrorCode } = require('helios-core/microsoft')
 const { AZURE_CLIENT_ID }    = require('./ipcconstants')
 
 const log = LoggerUtil.getLogger('AuthManager')
 
 // Functions
+
+function microsoftErrorDisplayable(errorCode) {
+    switch(errorCode) {
+        case MicrosoftErrorCode.NO_PROFILE:
+            return {
+                title: 'Erreur lors de la connexion :<br>Profil non configuré',
+                desc: 'Votre compte Microsoft n\'a pas encore de profil Minecraft configuré. Si vous avez récemment acheté le jeu ou l\'avez utilisé via Xbox Game Pass, vous devez configurer votre profil sur <a href="https://minecraft.net/">Minecraft.net</a>.<br><br>Si vous n\'avez pas encore acheté le jeu, vous pouvez également le faire sur <a href="https://minecraft.net/">Minecraft.net</a>.'
+            }
+        case MicrosoftErrorCode.NO_XBOX_ACCOUNT:
+            return {
+                title: 'Erreur lors de la connexion :<br>Pas de compte Xbox',
+                desc: 'Votre compte Microsoft n\'est associé à aucun compte Xbox.'
+            }
+        case MicrosoftErrorCode.XBL_BANNED:
+            return {
+                title: 'Erreur lors de la connexion :<br>Xbox Live indisponible',
+                desc: 'Votre compte Microsoft provient d\'un pays où Xbox Live n\'est pas disponible ou interdit.'
+            }
+        case MicrosoftErrorCode.UNDER_18:
+            return {
+                title: 'Erreur lors de la connexion :<br>Approbation parentale requise',
+                desc: 'Les comptes des utilisateurs de moins de 18 ans doivent être ajoutés à une famille par un adulte.'
+            }
+        case MicrosoftErrorCode.UNKNOWN:
+            return {
+                title: 'Erreur inconnue lors de la connexion',
+                desc: 'Une erreur inconnue s\'est produite. Veuillez consulter la console pour plus de détails. (CTRL+Shift+I)'
+            }
+    }
+}
+
+function mojangErrorDisplayable(errorCode) {
+    switch(errorCode) {
+        case MojangErrorCode.ERROR_METHOD_NOT_ALLOWED:
+            return {
+                title: 'Erreur interne :<br>Méthode non autorisée',
+                desc: 'Méthode non autorisée. Veuillez signaler cette erreur. (CTRL+Shift+I)'
+            }
+        case MojangErrorCode.ERROR_NOT_FOUND:
+            return {
+                title: 'Erreur interne :<br>Non trouvé',
+                desc: 'Le point de terminaison d\'authentification n\'a pas été trouvé. Veuillez signaler ce problème. (CTRL+Shift+I)'
+            }
+        case MojangErrorCode.ERROR_USER_MIGRATED:
+            return {
+                title: 'Erreur lors de la connexion :<br>Compte migré',
+                desc: 'Vous avez tenté de vous connecter avec un compte migré. Réessayez en utilisant l\'e-mail du compte comme nom d\'utilisateur.'
+            }
+        case MojangErrorCode.ERROR_INVALID_CREDENTIALS:
+            return {
+                title: 'Erreur lors de la connexion :<br>Informations d\'identification non valides',
+                desc: 'L\'email ou le mot de passe que vous avez saisi est incorrect. Veuillez réessayer.'
+            }
+        case MojangErrorCode.ERROR_RATELIMIT:
+            return {
+                title: 'Erreur lors de la connexion :<br>Trop de tentatives',
+                desc: 'Il y a eu trop de tentatives de connexion avec ce compte récemment. Veuillez réessayer plus tard.'
+            }
+        case MojangErrorCode.ERROR_INVALID_TOKEN:
+            return {
+                title: 'Erreur lors de la connexion :<br>Jeton invalide',
+                desc: 'Le jeton d\'accès fourni n\'est pas valide.'
+            }
+        case MojangErrorCode.ERROR_ACCESS_TOKEN_HAS_PROFILE:
+            return {
+                title: 'Erreur lors de la connexion :<br>Le jeton a un profil',
+                desc: 'Le jeton d\'accès possède déjà un profil attribué. La sélection des profils n\'est pas encore implémentée.'
+            }
+        case MojangErrorCode.ERROR_CREDENTIALS_MISSING:
+            return {
+                title: 'Erreur lors de la connexion :<br>Informations d\'identification manquantes',
+                desc: 'Le nom d\'utilisateur/mot de passe n\'a pas été soumis ou le mot de passe comporte moins de 3 caractères.'
+            }
+        case MojangErrorCode.ERROR_INVALID_SALT_VERSION:
+            return {
+                title: 'Erreur lors de la connexion :<br>Version de sel non valide',
+                desc: 'Version de sel non valide.'
+            }
+        case MojangErrorCode.ERROR_UNSUPPORTED_MEDIA_TYPE:
+            return {
+                title: 'Erreur interne :<br>Type de média non pris en charge',
+                desc: 'Type de média non pris en charge. Veuillez signaler cette erreur. (CTRL+Shift+I)'
+            }
+        case MojangErrorCode.ERROR_GONE:
+            return {
+                title: 'Erreur lors de la connexion :<br>Compte migré',
+                desc: 'Le compte a été migré vers un compte Microsoft. Veuillez vous connecter avec Microsoft.'
+            }
+        case MojangErrorCode.ERROR_UNREACHABLE:
+            return {
+                title: 'Erreur lors de la connexion :<br>Inaccessible',
+                desc: 'Impossible d\'accéder aux serveurs d\'authentification. Assurez-vous qu\'ils sont en ligne et que vous êtes connecté à Internet.'
+            }
+        case MojangErrorCode.ERROR_NOT_PAID:
+            return {
+                title: 'Erreur lors de la connexion :<br>Jeu non acheté',
+                desc: 'Le compte avec lequel vous essayez de vous connecter n\'a pas acheté de copie de Minecraft.<br>Vous pouvez acheter une copie sur <a href="https://minecraft.net/">Minecraft.net</a> ou vous créer un compte gratuit dans ce launcher.'
+            }
+        case MojangErrorCode.UNKNOWN:
+            return {
+                title: 'Erreur inconnue lors de la connexion',
+                desc: 'Une erreur inconnue s\'est produite. Veuillez consulter la console pour plus de détails. (CTRL+Shift+I)'
+            }
+        default:
+            throw new Error(`Unknown error code: ${errorCode}`)
+    }
+}
 
 /**
 * Add a Mojang account. This will authenticate the given credentials with Mojang's
