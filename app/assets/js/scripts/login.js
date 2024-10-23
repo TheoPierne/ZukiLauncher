@@ -65,7 +65,7 @@ function validateEmail(value){
         } else {
             loginEmailError.style.opacity = 0
             lu = true
-            if(lp){
+            if(lp || !isOfficialLogin){
                 loginDisabled(false)
             }
         }
