@@ -980,7 +980,7 @@ function bindDropinModsRemoveButton() {
                 setOverlayContent(
                     `Échec de la suppression<br>Drop-in Mod ${fullName}`,
                     'Assurez-vous que le fichier n\'est pas utilisé et réessayez.',
-                    'Okay'
+                    'Ok'
                 )
                 setOverlayHandler(null)
                 toggleOverlay(true)
@@ -1035,7 +1035,7 @@ function saveDropinModConfiguration() {
                         setOverlayContent(
                             'Impossible de basculer<br>un ou plusieurs Drop-in Mods',
                             err.message,
-                            'Okay'
+                            'Ok'
                         )
                         setOverlayHandler(null)
                         toggleOverlay(true)
