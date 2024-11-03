@@ -1786,6 +1786,10 @@ input:checked + .toggleSwitchSlider:before {
     margin-bottom: 10px;
 }
 
+.settingsModName {
+    user-select: text;
+}
+
 /* Mod elements sub-containers. */
 #settingsReqModsContainer,
 #settingsOptModsContainer,
