@@ -224,3 +224,18 @@ document.addEventListener('keydown', function (e) {
         window.toggleDevTools()
     }
 })
+
+/**
+ * Deselect, selected text when clicking on other element
+ */
+document.addEventListener('click', e => {
+    const { userSelect } = getComputedStyle(e.target)
+
+    if (window.getSelection && userSelect !== 'text') {
+        const selection = getSelection()
+
+        if (selection.type === 'Range') {
+            selection.removeAllRanges()
+        }
+    }
+})
