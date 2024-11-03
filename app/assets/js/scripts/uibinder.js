@@ -109,10 +109,7 @@ async function showMainUI(data) {
                 ) ||
                 ['alpha', 'beta', 'dev'].some(e => selectedServer.rawServer.version.includes(e))
             ) &&
-            (
-                ConfigManager.getSelectedAccount().type !== 'unofficial' &&
-                !['WOUHAIT', 'KNIGHTKENOBI_'].includes(ConfigManager.getSelectedAccount().username.toUpperCase())
-            )
+            !['WOUHAIT', 'KNIGHTKENOBI_'].includes(ConfigManager.getSelectedAccount().username.toUpperCase())
         ) {
             currentView = VIEWS.waitingNextServer
             $(VIEWS.waitingNextServer).fadeIn(1000)
