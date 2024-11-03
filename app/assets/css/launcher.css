@@ -212,6 +212,54 @@ body, button {
 
 /*******************************************************************************
  *                                                                             *
+ * Welcome View (waitingNextServer.ejs)                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
+#waitingNextServerContainer {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.50);
+}
+
+#waitingNextServerContent {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 50%;
+    top: -10%;
+    position: relative;
+}
+
+@media screen and (max-width: 680px) {
+    #waitingNextServerContent {
+        width: 75%;
+    }
+}
+
+#waitingNextServerAccessLanding {
+    background: none;
+    border: none;
+    color: #fff;
+    font-weight: 900;
+    font-size: 16px;
+    padding: 0px;
+    cursor: pointer;
+    transition: 0.25s ease;
+    text-shadow: 0px 0px 0px #bebcbb;
+}
+
+#waitingNextServerAccessLanding:hover, #waitingNextServerAccessLanding:focus {
+    text-shadow: 0px 0px 20px #fff, 0px 0px 20px #fff;
+}
+
+/*******************************************************************************
+ *                                                                             *
  * Welcome View (welcome.ejs)                                                  *
  *                                                                             *
  ******************************************************************************/

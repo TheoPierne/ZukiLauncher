@@ -24,7 +24,8 @@ const VIEWS = {
     login: '#loginContainer',
     settings: '#settingsContainer',
     welcome: '#welcomeContainer',
-    waiting: '#waitingContainer'
+    waiting: '#waitingContainer',
+    waitingNextServer: '#waitingNextServerContainer',
 }
 
 // The currently shown view container.
@@ -72,15 +73,17 @@ function changeBackgroundImage(){
     }, 60000)
 }
 
-async function showMainUI(data){
+async function showMainUI(data) {
 
     if(!isDev){
         loggerAutoUpdater.info('Initializing..')
         ipcRenderer.send('autoUpdateAction', 'initAutoUpdater', ConfigManager.getAllowPrerelease())
     }
 
+    const selectedServer = data.getServerById(ConfigManager.getSelectedServer())
+
     await prepareSettings(true)
-    updateSelectedServer(data.getServerById(ConfigManager.getSelectedServer()))
+    updateSelectedServer(selectedServer)
     refreshServerStatus()
     setTimeout(() => {
         document.getElementById('frameBar').style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
@@ -95,7 +98,25 @@ async function showMainUI(data){
             validateSelectedAccount()
         }
 
-        if(ConfigManager.isFirstLaunch()){
+        const currentServerEndingDate = new Date('November 3, 2024 18:00:00').getTime()
+        const nextServerOpeningDate = new Date('December 1, 2024 14:00:00').getTime()
+
+        if (
+            (
+                (
+                    Date.now() > currentServerEndingDate &&
+                    nextServerOpeningDate - Date.now() >= 0
+                ) ||
+                ['alpha', 'beta', 'dev'].some(e => selectedServer.rawServer.version.includes(e))
+            ) &&
+            (
+                ConfigManager.getSelectedAccount().type !== 'unofficial' &&
+                !['WOUHAIT', 'KNIGHTKENOBI_'].includes(ConfigManager.getSelectedAccount().username.toUpperCase())
+            )
+        ) {
+            currentView = VIEWS.waitingNextServer
+            $(VIEWS.waitingNextServer).fadeIn(1000)
+        } else if (ConfigManager.isFirstLaunch()) {
             currentView = VIEWS.welcome
             $(VIEWS.welcome).fadeIn(1000)
         } else {
