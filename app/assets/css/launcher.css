@@ -242,7 +242,8 @@ body, button {
     }
 }
 
-#waitingNextServerAccessLanding {
+#waitingNextServerAccessLanding,
+#waitingNextServerUpdateLauncher {
     background: none;
     border: none;
     color: #fff;
@@ -254,7 +255,14 @@ body, button {
     text-shadow: 0px 0px 0px #bebcbb;
 }
 
-#waitingNextServerAccessLanding:hover, #waitingNextServerAccessLanding:focus {
+#waitingNextServerUpdateLauncher {
+    border: 1px solid #fff;
+    border-radius: 2px;
+    padding: 3px 40px;
+}
+
+#waitingNextServerAccessLanding:hover, #waitingNextServerAccessLanding:focus,
+#waitingNextServerUpdateLauncher:hover, #waitingNextServerUpdateLauncher:focus {
     text-shadow: 0px 0px 20px #fff, 0px 0px 20px #fff;
 }
 
