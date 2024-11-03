@@ -386,7 +386,6 @@ ipcRenderer.on(MSFT_OPCODE.REPLY_LOGIN, (_, ...arguments_) => {
     if (arguments_[0] === MSFT_REPLY_TYPE.ERROR) {
 
         const viewOnClose = arguments_[2]
-        console.log(arguments_)
         switchView(getCurrentView(), viewOnClose, 500, 500, () => {
 
             if (arguments_[1] === MSFT_ERROR.NOT_FINISHED) {
@@ -418,8 +417,6 @@ ipcRenderer.on(MSFT_OPCODE.REPLY_LOGIN, (_, ...arguments_) => {
                 let error = queryMap.error // Error might be 'access_denied' ?
                 let errorDesc = queryMap.error_description
                 console.log('Error getting authCode, is Azure application registered correctly?')
-                console.log(error)
-                console.log(error_description)
                 console.log('Full query map', queryMap)
                 setOverlayContent(
                     error,
