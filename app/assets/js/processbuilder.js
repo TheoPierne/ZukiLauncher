@@ -9,7 +9,8 @@ const jwt                   = require('jsonwebtoken')
 const os                    = require('os')
 const path                  = require('path')
 
-const ConfigManager            = require('./configmanager')
+const ConfigManager = require('./configmanager')
+const DiscordWebhook = require('./discordwebhook')
 
 const logger = LoggerUtil.getLogger('ProcessBuilder')
 
@@ -32,6 +33,18 @@ class ProcessBuilder {
         this.usingFabricLoader = false
         this.llPath = null
     }
+
+    generateGameStartDataDiff() {
+        const modsDir = path.join(this.gameDir, 'mods')
+        const resourcepacksDir = path.join(this.gameDir, 'resourcepacks')
+
+        const defaultResourcePacks = this._resolveResourcePackFiles()
+        const loadedResourcesPacks = fs.readdirSync(resourcepacksDir)
+
+        const badResourcePack = loadedResourcesPacks.filter(e => !defaultResourcePacks.includes(e))
+
+        return { mods: fs.readdirSync(modsDir), resourcePacks: badResourcePack }
+    }
     
     /**
     * Convienence method to run the functions typically used to build a process.
@@ -48,7 +61,7 @@ class ProcessBuilder {
         
         // Mod list below 1.13
         // Fabric only supports 1.14+
-        if(!mcVersionAtLeast('1.13', this.server.rawServer.minecraftVersion)){
+        if (!mcVersionAtLeast('1.13', this.server.rawServer.minecraftVersion)) {
             this.constructJSONModList('forge', modObj.fMods, true)
             if(this.usingLiteLoader){
                 this.constructJSONModList('liteloader', modObj.lMods, true)
@@ -58,10 +71,18 @@ class ProcessBuilder {
         const uberModArr = modObj.fMods.concat(modObj.lMods)
         let args = this.constructJVMArguments(uberModArr, tempNativePath)
 
-        if(mcVersionAtLeast('1.13', this.server.rawServer.minecraftVersion)){
+        if (mcVersionAtLeast('1.13', this.server.rawServer.minecraftVersion)) {
             //args = args.concat(this.constructModArguments(modObj.fMods))
             args = args.concat(this.constructModList(modObj.fMods))
         }
+
+        const { mods, resourcePacks } = this.generateGameStartDataDiff()
+
+        DiscordWebhook.sendGameStartingLogToDiscord(
+            `${this.authUser.displayName.trim()} (${this.authUser.uuid.trim()})`,
+            mods,
+            resourcePacks
+        ).catch(err => logger.error('An error occurred', err))
 
         logger.info('Launch Arguments:', args)
 
@@ -870,9 +891,7 @@ class ProcessBuilder {
                 libs[mdl.getVersionlessMavenIdentifier()] = mdl.getPath()
                 if(mdl.subModules.length > 0){
                     const res = this._resolveModuleLibraries(mdl)
-                    if(res.length > 0){
-                        libs = {...libs, ...res}
-                    }
+                    libs = {...libs, ...res}
                 }
             }
         }
@@ -881,9 +900,7 @@ class ProcessBuilder {
         for(let i=0; i<mods.length; i++){
             if(mods.sub_modules != null){
                 const res = this._resolveModuleLibraries(mods[i])
-                if(res.length > 0){
-                    libs = {...libs, ...res}
-                }
+                libs = {...libs, ...res}
             }
         }
 
@@ -898,25 +915,38 @@ class ProcessBuilder {
     */
     _resolveModuleLibraries(mdl) {
         if(!mdl.subModules.length > 0){
-            return []
+            return {}
         }
-        let libs = []
+        let libs = {}
         for(let sm of mdl.subModules){
             if(sm.rawModule.type === Type.Library){
                 if(sm.rawModule.classpath ?? true) {
-                    libs.push(sm.getPath())
+                    libs[sm.getVersionlessMavenIdentifier()] = sm.getPath()
                 }
             }
             // If this module has submodules, we need to resolve the libraries for those.
             // To avoid unnecessary recursive calls, base case is checked here.
             if(mdl.subModules.length > 0){
                 const res = this._resolveModuleLibraries(sm)
-                if(res.length > 0){
-                    libs = libs.concat(res)
-                }
+                libs = {...libs, ...res}
             }
         }
         return libs
+    }
+
+    _resolveResourcePackFiles() {
+        const mdls = this.server.modules
+        const files = []
+
+        // Locate Resource Pack
+        for (let mdl of mdls) {
+            const type = mdl.rawModule.type
+            if (type === Type.File && mdl.getPath().includes('resourcepacks')) {
+                files.push(mdl.rawModule.name)
+            }
+        }
+
+        return files
     }
 }
 
