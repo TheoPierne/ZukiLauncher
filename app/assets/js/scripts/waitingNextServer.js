@@ -5,7 +5,7 @@ const countdownElement = document.getElementById('countdown')
 const buttonAccessLanding = document.getElementById('waitingNextServerAccessLanding')
 
 // Date de l'ouverture du prochain serveur
-const openingDate = new Date('December 1, 2024 14:00:00').getTime()
+const openingDate = new Date('December 6, 2024 20:00:00').getTime()
 
 // Met à jour le compte à rebours chaque seconde
 const countdownInterval = setInterval(() => {

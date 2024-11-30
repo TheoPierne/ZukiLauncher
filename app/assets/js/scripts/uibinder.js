@@ -99,7 +99,7 @@ async function showMainUI(data) {
         }
 
         const currentServerEndingDate = new Date('November 3, 2024 18:00:00').getTime()
-        const nextServerOpeningDate = new Date('December 1, 2024 14:00:00').getTime()
+        const nextServerOpeningDate = new Date('December 6, 2024 20:00:00').getTime()
 
         if (
             (
