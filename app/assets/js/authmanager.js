@@ -172,16 +172,16 @@ exports.addMojangAccount = async function(username, password) {
 * @param {string} username The account username.
 * @returns {Promise<Object>} Promise which resolves the resolved authenticated account object.
 */
-exports.addUnofficalAccount = async function(username) {
+exports.addUnofficalAccount = function(username) {
     try {
-        if (!['WOUHAIT', 'KNIGHTKENOBI_'].includes(username.toUpperCase())) {
-            const uuid = uuidv5(username + machineIdSync(), uuidv5.DNS).replaceAll('-', '')
+        if (!['WOUHAIT', 'ZUKIRYA'].includes(username.toUpperCase())) {
+            const uuid = uuidv5('zukipalace-' + username + machineIdSync(), uuidv5.DNS).replaceAll('-', '')
             const ret = ConfigManager.addUnofficalAuthAccount(uuid, username, username)
             if(ConfigManager.getClientToken() == null){
                 ConfigManager.setClientToken('00000000000000000000000000000000')
             }
             ConfigManager.save()
-            return ret
+            return Promise.resolve(ret)
         } else {
             return Promise.reject({
                 title: 'Erreur avec le Pseudo',
@@ -325,7 +325,7 @@ exports.removeMojangAccount = async function(uuid){
 * @param {string} uuid The UUID of the account to be removed.
 * @returns {Promise.<void>} Promise which resolves to void when the action is complete.
 */
-exports.removeMicrosoftAccount = async function(uuid){
+exports.removeMicrosoftAccount = function(uuid){
     try {
         ConfigManager.removeAuthAccount(uuid)
         ConfigManager.save()
@@ -342,7 +342,7 @@ exports.removeMicrosoftAccount = async function(uuid){
 * @param {string} uuid The UUID of the account to be removed.
 * @returns {Promise.<void>} Promise which resolves to void when the action is complete.
 */
-exports.removeUnofficialAccount = async function(uuid){
+exports.removeUnofficialAccount = function(uuid){
     try {
         const authAcc = ConfigManager.getAuthAccount(uuid)
         if(authAcc) {
@@ -463,14 +463,14 @@ async function validateSelectedMicrosoftAccount() {
  * @returns {Promise<boolean>} Promise which resolves to true if the access token is valid,
  * otherwise false.
  */
-exports.validateSelected = async () => {
+exports.validateSelected = () => {
     const current = ConfigManager.getSelectedAccount()
 
     if(current.type === 'microsoft') {
-        return await validateSelectedMicrosoftAccount()
+        return validateSelectedMicrosoftAccount()
     } else if(current.type === 'mojang') {
-        return await validateSelectedMojangAccount()
+        return validateSelectedMojangAccount()
     } else {
-        return true
+        return Promise.resolve(true)
     }
 }

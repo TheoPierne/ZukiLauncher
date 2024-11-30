@@ -88,21 +88,21 @@ function bindFileSelectors() {
   */
 function initSettingsValidators() {
     const sEls = document.getElementById('settingsContainer').querySelectorAll('[cValue]')
-    Array.from(sEls).map((v, index, arr) => {
+    Array.from(sEls).map(v => {
         const vFn = ConfigManager['validate' + v.getAttribute('cValue')]
         if (typeof vFn === 'function') {
             if (v.tagName === 'INPUT') {
                 if (v.type === 'number' || v.type === 'text') {
                     v.addEventListener('keyup', (e) => {
-                        const v = e.target
-                        if (!vFn(v.value)) {
-                            settingsState.invalid.add(v.id)
-                            v.setAttribute('error', '')
+                        const { target } = e
+                        if (!vFn(target.value)) {
+                            settingsState.invalid.add(target.id)
+                            target.setAttribute('error', '')
                             settingsSaveDisabled(true)
                         } else {
-                            if (v.hasAttribute('error')) {
-                                v.removeAttribute('error')
-                                settingsState.invalid.delete(v.id)
+                            if (target.hasAttribute('error')) {
+                                target.removeAttribute('error')
+                                settingsState.invalid.delete(target.id)
                                 if (settingsState.invalid.size === 0) {
                                     settingsSaveDisabled(false)
                                 }
@@ -172,7 +172,7 @@ async function initSettingsValues() {
  */
 function saveSettingsValues() {
     const sEls = document.getElementById('settingsContainer').querySelectorAll('[cValue]')
-    Array.from(sEls).map((v, index, arr) => {
+    Array.from(sEls).map(v => {
         const cVal = v.getAttribute('cValue')
         const serverDependent = v.hasAttribute('serverDependent') // Means the first argument is the server id.
         const sFn = ConfigManager['set' + cVal]
@@ -877,7 +877,7 @@ function parseModulesForUI(mdls, submodules, servConf) {
  */
 function bindModsToggleSwitch() {
     const sEls = settingsModsContainer.querySelectorAll('[formod]')
-    Array.from(sEls).map((v, index, arr) => {
+    Array.from(sEls).map(v => {
         v.onchange = () => {
             if (v.checked) {
                 document.getElementById(v.getAttribute('formod')).setAttribute('enabled', '')
@@ -967,7 +967,7 @@ async function resolveDropinModsForUI() {
  */
 function bindDropinModsRemoveButton() {
     const sEls = settingsModsContainer.querySelectorAll('[remmod]')
-    Array.from(sEls).map((v, index, arr) => {
+    Array.from(sEls).map(v => {
         v.onclick = async () => {
             const fullName = v.getAttribute('remmod')
             const res = await DropinModUtil.deleteDropinMod(CACHE_SETTINGS_MODS_DIR, fullName)
@@ -1475,7 +1475,7 @@ const settingsAboutChangelogText = settingsTabAbout.getElementsByClassName('sett
 const settingsAboutChangelogButton = settingsTabAbout.getElementsByClassName('settingsChangelogButton')[0]
 
 // Bind the devtools toggle button.
-document.getElementById('settingsAboutDevToolsButton').onclick = (e) => {
+document.getElementById('settingsAboutDevToolsButton').onclick = () => {
     let window = remote.getCurrentWindow()
     window.toggleDevTools()
 }

@@ -88,7 +88,7 @@ function setLaunchEnabled(val) {
 }
 
 // Bind launch button
-document.getElementById('launch_button').addEventListener('click', async e => {
+document.getElementById('launch_button').addEventListener('click', async () => {
     loggerLanding.info('Launching game..')
     try {
         const server = (await DistroAPI.getDistribution()).getServerById(ConfigManager.getSelectedServer())
@@ -115,7 +115,7 @@ document.getElementById('launch_button').addEventListener('click', async e => {
 })
 
 // Bind settings button
-document.getElementById('settingsMediaButton').onclick = async e => {
+document.getElementById('settingsMediaButton').onclick = async () => {
     await prepareSettings()
     switchView(getCurrentView(), VIEWS.settings)
 }
@@ -162,7 +162,7 @@ document.getElementById('avatarOverlay').onclick = async e => {
 }
 
 // Update Mojang Status Color
-const refreshMojangStatuses = async function () {
+const refreshMojangStatuses = async () => {
     loggerLanding.info('Refreshing Mojang Statuses..')
 
     let status = 'grey'
@@ -230,7 +230,7 @@ const refreshServerStatus = async (fade = false) => {
     let pVal = 'HORS LIGNE'
 
     try {
-        const servStat = await getServerStatus(47, serv.hostname, serv.port)
+        const servStat = await getServerStatus(767, serv.hostname, serv.port)
         pLabel = 'JOUEURS'
         pVal = servStat.players.online + '/' + servStat.players.max
 
@@ -255,8 +255,8 @@ refreshMojangStatuses()
 // Server Status is refreshed in uibinder.js on distributionIndexDone.
 
 // Set refresh rate to once every 5 minutes.
-let mojangStatusListener = setInterval(() => refreshMojangStatuses(true), 300000)
-let serverStatusListener = setInterval(() => refreshServerStatus(true), 300000)
+let mojangStatusListener = setInterval(() => refreshMojangStatuses(true), 300_000)
+let serverStatusListener = setInterval(() => refreshServerStatus(true), 300_000)
 
 /**
  * Shows an error overlay, toggles off the launch area.
@@ -541,7 +541,7 @@ async function dlAsync(login = true) {
     if (login) {
         const authUser = ConfigManager.getSelectedAccount()
 
-        if (authUser.type === 'unofficial' && ['WOUHAIT', 'KNIGHTKENOBI_'].includes(authUser.username)) {
+        if (authUser.type === 'unofficial' && ['WOUHAIT', 'ZUKIRYA'].includes(authUser.username.toUpperCase())) {
             loggerLaunchSuite.error('Trying to start the game with a free moderator account.')
             showLaunchFailure('Minecraft n\'a pas pu démarrer correctement.', 'Votre compte gratuit utilise le pseudo d\'un modérateur en jeu. Pour des raisons de sécurité vous n\'êtes pas autorisé à utiliser le même pseudo qu\'un modérateur en jeu.')
             return
@@ -551,8 +551,8 @@ async function dlAsync(login = true) {
         let pb = new ProcessBuilder(serv, versionData, modLoaderData, authUser, remote.app.getVersion())
         setLaunchDetails('Lancement du jeu..')
 
-        // const SERVER_JOINED_REGEX = /\[.+\]: \[CHAT\] [a-zA-Z0-9_]{1,16} joined the game/
-        const SERVER_JOINED_REGEX = new RegExp(`\\[.+\\]: \\[CHAT\\] ${authUser.displayName} joined the game`)
+        // const SERVER_JOINED_REGEX = new RegExp(`\\[.+\\]: \\[CHAT\\] ${authUser.displayName} joined the game`)
+        const SERVER_JOINED_REGEX = new RegExp(`Connecting to ${serv.hostname}, ${serv.port}`)
 
         const onLoadComplete = () => {
             toggleLaunchArea(false)
@@ -581,7 +581,7 @@ async function dlAsync(login = true) {
         }
 
         // Listener for Discord RPC.
-        const gameStateChange = function (data) {
+        const gameStateChange = (data) => {
             data = data.trim()
             if (SERVER_JOINED_REGEX.test(data)) {
                 DiscordWrapper.updateDetails('Exploration du Royaume !')
@@ -590,7 +590,7 @@ async function dlAsync(login = true) {
             }
         }
 
-        const gameErrorListener = function (data) {
+        const gameErrorListener = (data) => {
             data = data.trim()
             if (data.indexOf('Could not find or load main class net.minecraft.launchwrapper.Launch') > -1) {
                 loggerLaunchSuite.error('Game launch failed, LaunchWrapper was not downloaded properly.')
@@ -606,7 +606,7 @@ async function dlAsync(login = true) {
             proc.stdout.on('data', tempListener)
             proc.stderr.on('data', gameErrorListener)
             proc.on('error', error => loggerLaunchSuite.error(error))
-            proc.on('close', (code, _signal) => {
+            proc.on('close', (code) => {
                 if (code !== 0) {
                     loggerLaunchSuite.error('Minecraft didn\'t close correctly, code:', code)
                     showLaunchFailure('Minecraft ne s\'est pas fermé correctement.', `Une erreur s'est produite ce qui a entrainé la fermeture de Minecraft, voir la console pour plus d'inforamtions (CTRL + Shift + I) <br>Code de fermeture: <pre>${code}</pre>`)
@@ -619,7 +619,7 @@ async function dlAsync(login = true) {
             if (distro.rawDistribution.discord != null && serv.rawServer.discord != null) {
                 DiscordWrapper.initRPC(distro.rawDistribution.discord, serv.rawServer.discord)
                 hasRPC = true
-                proc.on('close', (code, signal) => {
+                proc.on('close', () => {
                     loggerLaunchSuite.info('Shutting down Discord Rich Presence..')
                     changeCloseAction('gameLaunch', false)
                     DiscordWrapper.shutdownRPC()
@@ -777,7 +777,7 @@ newsArticleContentScrollable.onscroll = (e) => {
  * content has finished loading and transitioning.
  */
 function reloadNews() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         $('#newsContent').fadeOut(250, () => {
             $('#newsErrorLoading').fadeIn(250)
             initNews().then(() => {
@@ -806,7 +806,7 @@ function showNewsAlert() {
  */
 function initNews() {
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         setNewsLoading(true)
 
         let news = {}
@@ -966,7 +966,7 @@ async function loadNews() {
         return null
     }
 
-    const promise = new Promise((resolve, reject) => {
+    const promise = new Promise((resolve) => {
 
         const newsFeed = distroData.rawDistribution.rss
         const newsHost = new URL(newsFeed).origin + '/'

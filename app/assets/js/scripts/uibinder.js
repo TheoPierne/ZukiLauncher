@@ -109,7 +109,11 @@ async function showMainUI(data) {
                 ) ||
                 ['alpha', 'beta', 'dev'].some(e => selectedServer.rawServer.version.includes(e))
             ) &&
-            !['WOUHAIT', 'KNIGHTKENOBI_'].includes(ConfigManager.getSelectedAccount().username.toUpperCase())
+            ![
+                '97a96519e2d14b4ebcf7c26026e719bb', // Wouhait
+                'e60aa86ee9074cc094274d88539a8862', // Zukirya
+                'ea1d90a86f4548c5abf21c3d65ae5543' // TimBV_
+            ].includes(ConfigManager.getSelectedAccount().uuid)
         ) {
             currentView = VIEWS.waitingNextServer
             $(VIEWS.waitingNextServer).fadeIn(1000)
