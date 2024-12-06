@@ -45,7 +45,9 @@ class ProcessBuilder {
 
         const badResourcePack = loadedResourcesPacks.filter(e => !defaultResourcePacks.includes(e))
 
-        return { mods: fs.readdirSync(modsDir), resourcePacks: badResourcePack }
+        const mods = fs.existsSync(modsDir) ? fs.readdirSync(modsDir) : []
+
+        return { mods, resourcePacks: badResourcePack }
     }
 
     /**
