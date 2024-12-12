@@ -893,12 +893,9 @@ async function initNews() {
         document.getElementById('newsNavigateRight').onclick = () => { switchHandler(true) }
         document.getElementById('newsNavigateLeft').onclick = () => { switchHandler(false) }
 
-        $('#newsErrorContainer').fadeOut(250, () => {
-            displayArticle(newsArr[0], 1)
-            $('#newsContent').fadeIn(250, () => {
-                resolve()
-            })
-        })
+        await $('#newsErrorContainer').fadeOut(250).promise()
+        displayArticle(newsArr[0], 1)
+        await $('#newsContent').fadeIn(250).promise()
     }
 }
 
