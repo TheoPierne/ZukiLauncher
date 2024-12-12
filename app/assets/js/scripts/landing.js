@@ -978,8 +978,9 @@ async function loadNews() {
                     const el = $(items[i])
 
                     // Resolve date.
-                    const date = new Date(el.find('pubDate').text()).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' })
-                    const timestamp = new Date(el.find('pubDate').text()).getTime()
+                    const parsedDate = new Date(el.find('pubDate').text())
+                    const date = parsedDate.toLocaleDateString('fr-FR', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' })
+                    const timestamp = parsedDate.getTime()
                     // Resolve comments.
                     let comments = el.find('slash\\:comments').text() || '0'
                     comments = comments + ' Comment' + (comments === '1' ? '' : 's')
