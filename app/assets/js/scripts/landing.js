@@ -2,7 +2,6 @@
  * Script for landing.ejs
  */
 // Requirements
-const crypto = require('crypto')
 const { URL } = require('url')
 const { MojangRestAPI, getServerStatus } = require('helios-core/mojang')
 const { RestResponseStatus, isDisplayableError, validateLocalFile } = require('helios-core/common')
@@ -310,7 +309,7 @@ async function asyncSystemScan(effectiveJavaOptions, launchAfter = true) {
 
             try {
                 downloadJava(effectiveJavaOptions, launchAfter)
-            } catch(err) {
+            } catch (err) {
                 loggerLanding.error('Unhandled error in Java Download', err)
                 showLaunchFailure('Erreur lors du lancement', 'Voir la console (CTRL + Shift + i) pour plus de détails.')
             }
@@ -364,7 +363,7 @@ async function downloadJava(effectiveJavaOptions, launchAfter = true) {
         effectiveJavaOptions.distribution
     )
 
-    if(asset == null) {
+    if (asset == null) {
         throw new Error('Failed to find OpenJDK distribution.')
     }
 
@@ -509,7 +508,7 @@ async function dlAsync(login = true) {
                 setDownloadPercentage(percent)
             })
             setDownloadPercentage(100)
-        } catch(err) {
+        } catch (err) {
             loggerLaunchSuite.error('Error during file download.')
             showLaunchFailure('Erreur lors du téléchargement d\'un fichier', err.displayable || 'Voir la console (CTRL + Shift + i) pour plus de détails.')
             return
@@ -797,6 +796,16 @@ function showNewsAlert() {
     $(newsButtonAlert).fadeIn(250)
 }
 
+async function digestMessage(str) {
+    const msgUint8 = new TextEncoder().encode(str)
+    const hashBuffer = await crypto.subtle.digest('SHA-1', msgUint8)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    const hashHex = hashArray
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('')
+    return hashHex
+}
+
 /**
  * Initialize News UI. This will load the news and prepare
  * the UI accordingly.
@@ -804,106 +813,93 @@ function showNewsAlert() {
  * @returns {Promise.<void>} A promise which resolves when the news
  * content has finished loading and transitioning.
  */
-function initNews() {
+async function initNews() {
+    setNewsLoading(true)
 
-    return new Promise((resolve) => {
-        setNewsLoading(true)
+    const news = await loadNews()
 
-        let news = {}
-        loadNews().then(news => {
+    newsArr = news?.articles || null
 
-            newsArr = news?.articles || null
+    if (newsArr == null) {
+        // News Loading Failed
+        setNewsLoading(false)
 
-            if (newsArr == null) {
-                // News Loading Failed
-                setNewsLoading(false)
+        await $('#newsErrorLoading').fadeOut(250).promise()
+        await $('#newsErrorFailed').fadeIn(250).promise()
+    } else if (newsArr.length === 0) {
+        // No News Articles
+        setNewsLoading(false)
 
-                $('#newsErrorLoading').fadeOut(250, () => {
-                    $('#newsErrorFailed').fadeIn(250, () => {
-                        resolve()
-                    })
-                })
-            } else if (newsArr.length === 0) {
-                // No News Articles
-                setNewsLoading(false)
+        ConfigManager.setNewsCache({
+            date: null,
+            content: null,
+            dismissed: false
+        })
+        ConfigManager.save()
 
-                ConfigManager.setNewsCache({
-                    date: null,
-                    content: null,
-                    dismissed: false
-                })
-                ConfigManager.save()
+        await $('#newsErrorLoading').fadeOut(250).promise()
+        await $('#newsErrorFailed').fadeIn(250).promise()
+    } else {
+        // Success
+        setNewsLoading(false)
 
-                $('#newsErrorLoading').fadeOut(250, () => {
-                    $('#newsErrorNone').fadeIn(250, () => {
-                        resolve()
-                    })
-                })
-            } else {
-                // Success
-                setNewsLoading(false)
+        const lN = newsArr[0]
+        const cached = ConfigManager.getNewsCache()
+        let newHash = await digestMessage(lN.content)
+        let newDate = new Date(lN.timestamp)
+        let isNew = false
 
-                const lN = newsArr[0]
-                const cached = ConfigManager.getNewsCache()
-                let newHash = crypto.createHash('sha1').update(lN.content).digest('hex')
-                let newDate = new Date(lN.date)
-                let isNew = false
+        if (cached.date != null && cached.content != null) {
 
-                if (cached.date != null && cached.content != null) {
+            if (new Date(cached.date) >= newDate) {
 
-                    if (new Date(cached.date) >= newDate) {
-
-                        // Compare Content
-                        if (cached.content !== newHash) {
-                            isNew = true
-                            showNewsAlert()
-                        } else {
-                            if (!cached.dismissed) {
-                                isNew = true
-                                showNewsAlert()
-                            }
-                        }
-
-                    } else {
+                // Compare Content
+                if (cached.content !== newHash) {
+                    isNew = true
+                    showNewsAlert()
+                } else {
+                    if (!cached.dismissed) {
                         isNew = true
                         showNewsAlert()
                     }
-
-                } else {
-                    isNew = true
-                    showNewsAlert()
                 }
 
-                if (isNew) {
-                    ConfigManager.setNewsCache({
-                        date: newDate.getTime(),
-                        content: newHash,
-                        dismissed: false
-                    })
-                    ConfigManager.save()
-                }
-
-                const switchHandler = (forward) => {
-                    let cArt = parseInt(newsContent.getAttribute('article'))
-                    let nxtArt = forward ? (cArt >= newsArr.length - 1 ? 0 : cArt + 1) : (cArt <= 0 ? newsArr.length - 1 : cArt - 1)
-
-                    displayArticle(newsArr[nxtArt], nxtArt + 1)
-                }
-
-                document.getElementById('newsNavigateRight').onclick = () => { switchHandler(true) }
-                document.getElementById('newsNavigateLeft').onclick = () => { switchHandler(false) }
-
-                $('#newsErrorContainer').fadeOut(250, () => {
-                    displayArticle(newsArr[0], 1)
-                    $('#newsContent').fadeIn(250, () => {
-                        resolve()
-                    })
-                })
+            } else {
+                isNew = true
+                showNewsAlert()
             }
 
-        })
+        } else {
+            isNew = true
+            showNewsAlert()
+        }
 
-    })
+        if (isNew) {
+            ConfigManager.setNewsCache({
+                date: newDate.getTime(),
+                content: newHash,
+                dismissed: false
+            })
+            ConfigManager.save()
+        }
+
+        const switchHandler = (forward) => {
+            let cArt = parseInt(newsContent.getAttribute('article'))
+            let nxtArt = forward ? (cArt >= newsArr.length - 1 ? 0 : cArt + 1) : (cArt <= 0 ? newsArr.length - 1 : cArt - 1)
+
+            displayArticle(newsArr[nxtArt], nxtArt + 1)
+        }
+
+        document.getElementById('newsNavigateRight').onclick = () => { switchHandler(true) }
+        document.getElementById('newsNavigateLeft').onclick = () => { switchHandler(false) }
+
+        $('#newsErrorContainer').fadeOut(250, () => {
+            displayArticle(newsArr[0], 1)
+            $('#newsContent').fadeIn(250, () => {
+                resolve()
+            })
+        })
+    }
 }
 
 /**
@@ -983,7 +979,7 @@ async function loadNews() {
 
                     // Resolve date.
                     const date = new Date(el.find('pubDate').text()).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric' })
-
+                    const timestamp = new Date(el.find('pubDate').text()).getTime()
                     // Resolve comments.
                     let comments = el.find('slash\\:comments').text() || '0'
                     comments = comments + ' Comment' + (comments === '1' ? '' : 's')
@@ -1005,6 +1001,7 @@ async function loadNews() {
                         link,
                         title,
                         date,
+                        timestamp,
                         author,
                         content,
                         comments,
