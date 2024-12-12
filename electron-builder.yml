@@ -35,6 +35,9 @@ mac:
         - 'arm64'
   artifactName: '${productName}-setup-${version}-${arch}.${ext}'
   category: 'public.app-category.games'
+  extendInfo:
+    - NSMicrophoneUsageDescription: 'Un mod Minecraft veut accéder à votre microphone.'
+    - NSHighResolutionCapable: true
 
 # Linux Configuration
 linux: 
