@@ -40,6 +40,7 @@ webFrame.setVisualZoomLevelLimits(1, 1)
 
 // Initialize auto updates in production environments.
 let updateCheckListener
+let updateAvailable = false
 if(!isDev){
     ipcRenderer.on('autoUpdateNotification', (event, arg, info) => {
         switch(arg){
@@ -54,6 +55,7 @@ if(!isDev){
                     info.darwindownload = `https://github.com/TheoPierne/ZukiLauncher/releases/download/v${info.version}/Zuki-Launcher-setup-${info.version}${process.arch === 'arm64' ? '-arm64' : '-x64'}.dmg`
                 }
 
+                updateAvailable = true
                 showUpdateUI(info)                
                 populateSettingsUpdateInformation(info)
                 break
@@ -69,6 +71,7 @@ if(!isDev){
             case 'update-not-available':
                 loggerAutoUpdater.info('No new update found.')
                 settingsUpdateButtonStatus('Vérifier les mises à jour')
+                updateAvailable = false
                 break
             case 'ready':
                 updateCheckListener = setInterval(() => {
