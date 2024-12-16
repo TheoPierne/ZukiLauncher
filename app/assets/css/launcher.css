@@ -1450,6 +1450,62 @@ input:checked + .toggleSwitchSlider:before {
     transform: translateX(15px);
 }
 
+/* Checkbox styles */
+.checkbox-container {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkbox-container .checkmark {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 15px;
+    width: 15px;
+    background-color: #eee;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+    background-color: #ccc;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    background-color: #1f8c0b;
+}
+
+.checkbox-container .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.checkbox-container .checkmark:after {
+    left: 9px;
+    top: 0;
+    width: 3px;
+    height: 8px;
+    border: solid #fff;
+    border-width: 0 3px 3px 0;
+    transform: rotate(45deg);
+    box-shadow: 1px 2px 0px 0px rgba(0, 0, 0, 0.75);
+}
+
 /* Range Slider styles. */
 .rangeSlider {
     width: 35%;
@@ -1808,11 +1864,13 @@ input:checked + .toggleSwitchSlider:before {
 /* Main content containers for mod elements. */
 #settingsReqModsContent,
 #settingsOptModsContent,
-#settingsDropinModsContent {
+#settingsDropinModsContent,
+#settingsStorageCategories {
     font-size: 12px;
     background: rgba(0, 0, 0, 0.25);
     border-radius: 3px;
     color: white;
+    margin-top: 20px;
 }
 
 /* Mod elements. */
@@ -1827,7 +1885,8 @@ input:checked + .toggleSwitchSlider:before {
 }
 
 /* Main content container for mod element information. */
-.settingsModContent {
+.settingsModContent,
+.settingsStorageContent {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1896,7 +1955,7 @@ input:checked + .toggleSwitchSlider:before {
 }
 
 /* Button to open the mods folder for drop-in mods. */
-#settingsDropinFileSystemButton {
+#settingsDropinFileSystemButton, #settingsFreeStorageButton {
     background: rgba(0, 0, 0, 0.25);
     border: 1px solid rgba(126, 126, 126, 0.57);
     border-radius: 3px;
@@ -1911,7 +1970,9 @@ input:checked + .toggleSwitchSlider:before {
 }
 #settingsDropinFileSystemButton:hover,
 #settingsDropinFileSystemButton:focus,
-#settingsDropinFileSystemButton[drag] {
+#settingsDropinFileSystemButton[drag],
+#settingsFreeStorageButton:hover,
+#settingsFreeStorageButton:focus {
     background: rgba(54, 54, 54, 0.25);
     text-shadow: 0px 0px 20px white;
 }
@@ -2225,6 +2286,38 @@ input:checked + .toggleSwitchSlider:before {
 /* Tailored style for the data directory header. */
 #settingsDataDirTitle {
     margin-bottom: 10px;
+}
+
+.settingsFreeStorageContainer {
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.50);
+    width: 75%;
+}
+
+.settingsFreeStorageContainer .settingsSelServContainer {
+    width: 100%;
+}
+
+.settingsStorageContent {
+    margin-bottom: 1rem;
+    margin-left: 1rem;
+}
+
+.settingsStorageContent:first-of-type {
+    margin-top: 1rem;
+}
+
+.settingsStorageContent.separator {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(126, 126, 126, 0.57);
+}
+
+#settingsFreeStorageButton {
+    margin-top: 20px;
+    padding: 0 20px;
+    text-align: center;
 }
 
 /* * *

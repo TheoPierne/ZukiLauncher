@@ -45,6 +45,15 @@
                 "pleaseWait": "Please wait.."
             }
         },
+        "settings": {
+            "launcher": {
+                "freeSpace": {
+                    "errorTitle": "An error has occurred",
+                    "errorMessage": "An error occurred while deleting files with the following error: ",
+                    "copyError": "Copy error"
+                }
+            }
+        },
         "processbuilder": {
             "exit": {
                 "exitErrorHeader": "Game exited with an error code",

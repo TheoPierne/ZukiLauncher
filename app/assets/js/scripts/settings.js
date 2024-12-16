@@ -2,6 +2,7 @@
 const os = require('os')
 const semver = require('semver')
 
+const { cleanOldDistroFiles, calculateFreeableSpace } = require('./assets/js/distromanager')
 const DropinModUtil = require('./assets/js/dropinmodutil')
 const { MSFT_OPCODE, MSFT_REPLY_TYPE, MSFT_ERROR } = require('./assets/js/ipcconstants')
 
@@ -1464,6 +1465,71 @@ async function prepareJavaTab() {
     populateJavaReqDesc(server)
     populateJvmOptsLink(server)
 }
+
+/**
+ * Launcher Tab
+ */
+
+/** @type {HTMLInputElement} */
+const deleteOldModVersion = document.getElementById('deleteOldModVersion')
+/** @type {HTMLInputElement} */
+const deleteOldResourcePackVersion = document.getElementById('deleteOldResourcePackVersion')
+/** @type {HTMLInputElement} */
+const deleteOldDistro = document.getElementById('deleteOldDistro')
+/** @type {HTMLButtonElement} */
+const settingsFreeStorageButton = document.getElementById('settingsFreeStorageButton')
+const freeableSpace = document.getElementById('freeableSpace')
+
+const deleteSettings = { deleteOldModVersion: false, deleteOldResourcePackVersion: false, deleteOldDistro: false }
+
+deleteOldModVersion.addEventListener('change', async () => {
+    deleteSettings.deleteOldModVersion = deleteOldModVersion.checked
+    const { size, numberOfFiles } = await calculateFreeableSpace(deleteSettings)
+    const str = numberOfFiles !== 0 ? ` (${numberOfFiles} fichier${numberOfFiles > 1 ? 's' : ''})` : ''
+    freeableSpace.innerText = `${size} Mo${str}`
+})
+
+// deleteOldResourcePackVersion.addEventListener('change', () => {
+//     deleteSettings.deleteOldResourcePackVersion = deleteOldResourcePackVersion.checked
+// })
+
+deleteOldDistro.addEventListener('change', async () => {
+    deleteSettings.deleteOldDistro = deleteOldDistro.checked
+    const { size, numberOfFiles } = await calculateFreeableSpace(deleteSettings)
+    const str = numberOfFiles !== 0 ? ` (${numberOfFiles} fichier${numberOfFiles > 1 ? 's' : ''})` : ''
+    freeableSpace.innerText = `${size} Mo${str}`
+})
+
+settingsFreeStorageButton.addEventListener('click', async () => {
+    const freeableSpaceValue = await calculateFreeableSpace(deleteSettings)
+
+    if (freeableSpaceValue === '0.00') {
+        return
+    }
+
+    try {
+        await cleanOldDistroFiles(deleteSettings)
+
+        document.querySelectorAll('.settingsStorageContent').forEach(e => e.querySelector('input').checked = false)
+        freeableSpace.innerText = '0.00 Mo'
+    } catch (err) {
+        setOverlayContent(
+            Lang.queryJS('settings.launcher.freeSpace.errorTitle'),
+            Lang.queryJS('settings.launcher.freeSpace.errorMessage') + err,
+            Lang.queryJS('settings.launcher.freeSpace.copyError')
+        )
+        setOverlayHandler(() => {
+            copy(err)
+            toggleOverlay(false)
+        })
+        setDismissHandler(() => {
+            toggleOverlay(false)
+        })
+        toggleOverlay(true, true)
+
+        throw err
+    }
+})
 
 /**
  * About Tab

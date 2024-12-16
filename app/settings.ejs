@@ -292,18 +292,6 @@
                 <span class="settingsTabHeaderText">Paramètres du Launcher</span>
                 <span class="settingsTabHeaderDesc">Options liées au Launcher lui-même.</span>
             </div>
-            <div class="settingsFieldContainer">
-                <div class="settingsFieldLeft">
-                    <span class="settingsFieldTitle">Autoriser les mises à jour de pré-version.</span>
-                    <span class="settingsFieldDesc">Les versions préliminaires incluent de nouvelles fonctionnalités qui n'ont peut-être pas été entièrement testées ou intégrées.<br>Cela sera toujours vrai si vous utilisez une version préliminaire.</span>
-                </div>
-                <div class="settingsFieldRight">
-                    <label class="toggleSwitch">
-                        <input type="checkbox" cValue="AllowPrerelease">
-                        <span class="toggleSwitchSlider"></span>
-                    </label>
-                </div>
-            </div>
             <div class="settingsFileSelContainer">
                 <div class="settingsFileSelContent">
                     <div class="settingsFieldTitle" id="settingsDataDirTitle">Répertoire de données</div>
@@ -322,6 +310,52 @@
                     </div>
                 </div>
                 <div class="settingsFileSelDesc">Tous les fichiers de jeu et les installations Java locales seront stockés dans le répertoire de données.<br> Les captures d'écran et les sauvegardes de mondes sont stockées dans le dossier d'instance pour la configuration de serveur correspondante.</div>
+            </div>
+            <div class="settingsFreeStorageContainer">
+                <span class="settingsFieldTitle">Libérer de l'espace de stockage</span>
+                <span class="settingsFieldDesc">Analysez et libérez de l'espace disque en supprimant les fichiers inutiles ou temporaires liés au jeu.</span>
+                <div class="settingsSelServContainer">
+                    <div class="settingsSelServContent"></div>
+                    <div class="settingsSwitchServerContainer">
+                        <div class="settingsSwitchServerContent">
+                            <button class="settingsSwitchServerButton">Changer</button>
+                        </div>
+                    </div>
+                </div>
+                <span class="settingsFieldDesc" id="currentStorageUse">Espace libéré : <span id="freeableSpace">0.00 Mo</span></span>
+                <div id="settingsStorageCategories">
+                    <div class="settingsStorageContent separator">
+                        <label class="checkbox-container">Anciennes versions des mods téléchargés par le launcher pour le serveur choisi
+                            <input type="checkbox" id="deleteOldModVersion">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
+                    <!-- <div class="settingsStorageContent separator">
+                        <label class="checkbox-container">Anciennes versions des packs de ressources téléchargés par le launcher pour le serveur choisi
+                            <input type="checkbox" id="deleteOldResourcePackVersion">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div> -->
+                    <div class="settingsStorageContent">
+                        <label class="checkbox-container">Anciennes versions de serveur inutilisées
+                            <input type="checkbox" id="deleteOldDistro">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
+                </div>
+                <button id="settingsFreeStorageButton">Libérer de l'espace</button>
+            </div>
+            <div class="settingsFieldContainer">
+                <div class="settingsFieldLeft">
+                    <span class="settingsFieldTitle">Autoriser les mises à jour de pré-version.</span>
+                    <span class="settingsFieldDesc">Les versions préliminaires incluent de nouvelles fonctionnalités qui n'ont peut-être pas été entièrement testées ou intégrées.<br>Cela sera toujours vrai si vous utilisez une version préliminaire.</span>
+                </div>
+                <div class="settingsFieldRight">
+                    <label class="toggleSwitch">
+                        <input type="checkbox" cValue="AllowPrerelease">
+                        <span class="toggleSwitchSlider"></span>
+                    </label>
+                </div>
             </div>
             <div class="settingsFieldContainer">
                 <div class="settingsFieldLeft">
