@@ -40,12 +40,12 @@
     "node-machine-id": "^1.1.12",
     "node-stream-zip": "^1.15.0",
     "semver": "^7.6.3",
-    "uuid": "^10.0.0"
+    "uuid": "^11.0.3"
   },
   "devDependencies": {
     "electron": "^33.2.1",
     "electron-builder": "^25.1.8",
-    "eslint": "^9.16.0"
+    "eslint": "^9.17.0"
   },
   "repository": {
     "type": "git",
