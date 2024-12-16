@@ -90,6 +90,24 @@ let isGameLaunch = false
 
 // Bind launch button
 document.getElementById('launch_button').addEventListener('click', async () => {
+    if (updateAvailable) {
+        setOverlayContent(
+            'Nouvelle mise à jour',
+            'Une mise à jour du launcher est disponible ! Sans celle-ci, vous ne pourrez pas lancer le jeu.',
+            'Accéder aux paramètres'
+        )
+        setOverlayHandler(async () => {
+            toggleOverlay(false)
+
+            await prepareSettings()
+            switchView(getCurrentView(), VIEWS.settings, 500, 500, () => {
+                settingsNavItemListener(document.getElementById('settingsNavUpdate'), false)
+            })
+        })
+        toggleOverlay(true)
+        return
+    }
+
     loggerLanding.info('Launching game..')
     try {
         const server = (await DistroAPI.getDistribution()).getServerById(ConfigManager.getSelectedServer())

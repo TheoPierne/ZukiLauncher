@@ -3809,7 +3809,7 @@ input:checked + .toggleSwitchSlider:before {
     font-family: 'Avenir Medium';
     font-weight: bold;
     border-radius: 2px;
-    padding: 0px 8.1px;
+    padding: 2px 8.1px;
     cursor: pointer;
     transition: 0.25s ease;
 }
