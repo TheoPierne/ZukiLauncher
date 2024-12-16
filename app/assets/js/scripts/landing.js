@@ -86,6 +86,8 @@ function setLaunchEnabled(val) {
     document.getElementById('launch_button').disabled = !val
 }
 
+let isGameLaunch = false
+
 // Bind launch button
 document.getElementById('launch_button').addEventListener('click', async () => {
     loggerLanding.info('Launching game..')
@@ -145,7 +147,10 @@ function updateSelectedServer(serv) {
     if (getCurrentView() === VIEWS.settings) {
         animateSettingsTabRefresh()
     }
-    setLaunchEnabled(serv != null)
+
+    if (!isGameLaunch) {
+        setLaunchEnabled(serv != null)
+    }
 }
 // Real text is set in uibinder.js on distributionIndexDone.
 server_selection_button.innerHTML = '\u2022 Chargement..'
@@ -555,6 +560,8 @@ async function dlAsync(login = true) {
 
         const onLoadComplete = () => {
             toggleLaunchArea(false)
+            isGameLaunch = true
+            setLaunchEnabled(!isGameLaunch)
             if (hasRPC) {
                 DiscordWrapper.updateDetails('Jeu en cours de chargement..')
                 proc.stdout.on('data', gameStateChange)
@@ -606,6 +613,8 @@ async function dlAsync(login = true) {
             proc.stderr.on('data', gameErrorListener)
             proc.on('error', error => loggerLaunchSuite.error(error))
             proc.on('close', (code) => {
+                isGameLaunch = false
+                setLaunchEnabled(!isGameLaunch)
                 if (code !== 0) {
                     loggerLaunchSuite.error('Minecraft didn\'t close correctly, code:', code)
                     showLaunchFailure('Minecraft ne s\'est pas fermé correctement.', `Une erreur s'est produite ce qui a entrainé la fermeture de Minecraft, voir la console pour plus d'inforamtions (CTRL + Shift + I) <br>Code de fermeture: <pre>${code}</pre>`)
@@ -628,6 +637,8 @@ async function dlAsync(login = true) {
             }
 
         } catch (err) {
+            isGameLaunch = false
+            setLaunchEnabled(!isGameLaunch)
             loggerLaunchSuite.error('Error during launch', err)
             showLaunchFailure('Erreur lors du lancement', 'Veuillez vérifier la console (CTRL + Shift + i) pour plus de détails et contactez le développeur si besoin.')
         }
