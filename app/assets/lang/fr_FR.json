@@ -51,6 +51,15 @@
                 "pleaseWait": "Patientez..."
             }
         },
+        "settings": {
+            "launcher": {
+                "freeSpace": {
+                    "errorTitle": "Une erreur est survenue",
+                    "errorMessage": "Une erreur est survenue lors de la suppression des fichiers avec l'erreur suivante : ",
+                    "copyError": "Copier l'erreur"
+                }
+            }
+        },
         "processbuilder": {
             "exit": {
                 "exitErrorHeader": "Le jeu s'est arrêté avec un code d'erreur",
