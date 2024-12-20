@@ -76,7 +76,7 @@ class ProcessBuilder {
             const currentPacks = currentPacksMatch && currentPacksMatch[1] ? JSON.parse(`[${currentPacksMatch[1]}]`) : []
 
             for (let i = 0; i < resourcePacks.length; i++) {
-                if (!resourcePacks[i].startsWith('file/')) {
+                if (!resourcePacks[i].startsWith('file/') && resourcePacks[i].endsWith('.zip')) {
                     resourcePacks[i] = `file/${resourcePacks[i]}`
                 }
             }
@@ -128,7 +128,7 @@ class ProcessBuilder {
             'continuity:default',
             'continuity:glass_pane_culling_fix',
             'moonlight:mods_dynamic_assets',
-            '§cWearable Christmas Hats§8-v1',
+            '§cWearable Christmas Hats§0_§8[v2]§0.zip',
             'Mizunos 16 Craft JE CIT_1.21.1-1.0_230720.zip',
             'Invisible Item Frame Pack_1.21.1-1.0_230720.zip',
             'ChristmasPack_1.21_v2.2.zip'
