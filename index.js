@@ -410,6 +410,9 @@ function getPlatformIcon(filename){
 
 app.on('ready', createWindow)
 app.on('ready', createMenu)
+app.on('ready', () => {
+    app.commandLine.appendSwitch('unsafely-treat-insecure-origin-as-secure', 'http://51.77.201.23/')
+})
 
 app.on('window-all-closed', () => {
     // On macOS it is common for applications and their menu bar

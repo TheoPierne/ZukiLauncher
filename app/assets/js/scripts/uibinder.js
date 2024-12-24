@@ -9,6 +9,7 @@ const { readdirSync } = require('fs')
 
 const AuthManager   = require('./assets/js/authmanager')
 const ConfigManager = require('./assets/js/configmanager')
+const { fetchServerDates } = require('./assets/js/datesmanager')
 const { DistroAPI } = require('./assets/js/distromanager')
 const Lang          = require('./assets/js/langloader')
 
@@ -85,7 +86,7 @@ async function showMainUI(data) {
     await prepareSettings(true)
     updateSelectedServer(selectedServer)
     refreshServerStatus()
-    setTimeout(() => {
+    setTimeout(async () => {
         document.getElementById('frameBar').style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
         changeBackgroundImage()
         $('#main').show()
@@ -98,19 +99,21 @@ async function showMainUI(data) {
             validateSelectedAccount()
         }
 
-        const currentServerEndingDate = new Date('November 3, 2024 18:00:00').getTime()
-        const nextServerOpeningDate = new Date('December 6, 2024 20:00:00').getTime()
+        const { nextServerOpeningDate, currentServerClosingDate } = await fetchServerDates()
+
+        const currentServerEndingDate = new Date(currentServerClosingDate).getTime()
+        const nextServerOpeningDateTimestamp = new Date(nextServerOpeningDate).getTime()
 
         if (
             (
                 (
                     Date.now() > currentServerEndingDate &&
-                    nextServerOpeningDate - Date.now() >= 0
+                    (isNaN(nextServerOpeningDateTimestamp) || nextServerOpeningDateTimestamp - Date.now() >= 0)
                 ) ||
                 ['alpha', 'beta', 'dev'].some(e => selectedServer.rawServer.version.includes(e))
             ) &&
             ![
-                '97a96519e2d14b4ebcf7c26026e719bb', // Wouhait
+                // '97a96519e2d14b4ebcf7c26026e719bb', // Wouhait
                 'e60aa86ee9074cc094274d88539a8862', // Zukirya
                 'ea1d90a86f4548c5abf21c3d65ae5543' // TimBV_
             ].includes(ConfigManager.getSelectedAccount().uuid)
