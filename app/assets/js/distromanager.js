@@ -9,7 +9,7 @@ const ConfigManager = require('./configmanager')
 
 const logger = LoggerUtil.getLogger('DistroManager')
 
-exports.REMOTE_DISTRO_URL = 'http://51.77.201.23/zuki-launcher/distribution.json'
+exports.REMOTE_DISTRO_URL = 'https://zukipalace.theopierne.fr/zuki-launcher/distribution.json'
 
 const api = new DistributionAPI(
     ConfigManager.getLauncherDirectory(),
