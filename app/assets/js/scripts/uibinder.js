@@ -9,7 +9,7 @@ const { readdirSync } = require('fs')
 
 const AuthManager   = require('./assets/js/authmanager')
 const ConfigManager = require('./assets/js/configmanager')
-const { fetchServerDates } = require('./assets/js/datesmanager')
+const { fetchServerDates, fetchAuthorizedAccounts } = require('./assets/js/datesmanager')
 const { DistroAPI } = require('./assets/js/distromanager')
 const Lang          = require('./assets/js/langloader')
 
@@ -100,9 +100,18 @@ async function showMainUI(data) {
         }
 
         const { nextServerOpeningDate, currentServerClosingDate } = await fetchServerDates()
+        let authorizedAccounts = await fetchAuthorizedAccounts()
 
         const currentServerEndingDate = new Date(currentServerClosingDate).getTime()
         const nextServerOpeningDateTimestamp = new Date(nextServerOpeningDate).getTime()
+
+        if (!authorizedAccounts || (Array.isArray(authorizedAccounts) && authorizedAccounts.length === 0)) {
+            authorizedAccounts = [
+                '97a96519e2d14b4ebcf7c26026e719bb', // Wouhait
+                'e60aa86ee9074cc094274d88539a8862', // Zukirya
+                'ea1d90a86f4548c5abf21c3d65ae5543' // TimBV_
+            ]
+        }
 
         if (
             (
@@ -112,11 +121,7 @@ async function showMainUI(data) {
                 ) ||
                 ['alpha', 'beta', 'dev'].some(e => selectedServer.rawServer.version.includes(e))
             ) &&
-            ![
-                '97a96519e2d14b4ebcf7c26026e719bb', // Wouhait
-                'e60aa86ee9074cc094274d88539a8862', // Zukirya
-                'ea1d90a86f4548c5abf21c3d65ae5543' // TimBV_
-            ].includes(ConfigManager.getSelectedAccount().uuid)
+            !authorizedAccounts.includes(ConfigManager.getSelectedAccount()?.uuid)
         ) {
             currentView = VIEWS.waitingNextServer
             $(VIEWS.waitingNextServer).fadeIn(1000)
