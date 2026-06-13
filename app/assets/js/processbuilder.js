@@ -40,12 +40,19 @@ class ProcessBuilder {
         const modsDir = path.join(this.gameDir, 'mods')
         const resourcepacksDir = path.join(this.gameDir, 'resourcepacks')
 
+        const safeReadDir = (dir) => {
+            try {
+                return fs.existsSync(dir) && fs.statSync(dir).isDirectory() ? fs.readdirSync(dir) : []
+            } catch {
+                return []
+            }
+        }
+
         const defaultResourcePacks = this._resolveResourcePackFiles()
-        const loadedResourcesPacks = fs.existsSync(resourcepacksDir) ? fs.readdirSync(resourcepacksDir) : []
+        const loadedResourcesPacks = safeReadDir(resourcepacksDir)
 
         const badResourcePack = loadedResourcesPacks.filter(e => !defaultResourcePacks.includes(e))
-
-        const mods = fs.existsSync(modsDir) ? fs.readdirSync(modsDir) : []
+        const mods = safeReadDir(modsDir)
 
         return { mods, resourcePacks: badResourcePack }
     }
