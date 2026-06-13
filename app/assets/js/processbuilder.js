@@ -41,7 +41,7 @@ class ProcessBuilder {
         const resourcepacksDir = path.join(this.gameDir, 'resourcepacks')
 
         const defaultResourcePacks = this._resolveResourcePackFiles()
-        const loadedResourcesPacks = fs.readdirSync(resourcepacksDir)
+        const loadedResourcesPacks = fs.existsSync(resourcepacksDir) ? fs.readdirSync(resourcepacksDir) : []
 
         const badResourcePack = loadedResourcesPacks.filter(e => !defaultResourcePacks.includes(e))
 
