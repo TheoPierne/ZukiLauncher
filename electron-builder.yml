@@ -7,14 +7,22 @@ copyright: 'Copyright © 2024 Théo Pierné'
 asar: true
 compression: 'maximum'
 
+# Everything in the project folder is packaged unless excluded here: never ship
+# local secrets (.env) or archives.
 files:
-  - '!{dist,.gitignore,.vscode,docs,dev-app-update.yml,.nvmrc,.eslintrc.json}'
+  - '!{dist,.gitignore,.vscode,docs,dev-app-update.yml,.nvmrc,.eslintrc.json,.env,.env.*,*.zip,eslint.config.*}'
 
 extraResources:
   - 'libraries'
 
 # Windows Configuration
-win: 
+# Code signing: only use a certificate trusted by Windows (Azure Trusted Signing
+# "Public Trust", OV/EV certificate...). Once win.azureSignOptions.publisherName
+# (or signtoolOptions.publisherName) is set, electron-updater refuses any update
+# whose signature is not valid on the player's PC or whose certificate name
+# differs. A "Private Trust" certificate is not trusted on players' PCs and
+# would block every update.
+win:
   target: 
     - target: 'nsis'
       arch: 'x64'

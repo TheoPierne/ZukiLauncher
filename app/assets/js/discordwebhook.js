@@ -1,9 +1,19 @@
 const { LoggerUtil } = require('helios-core')
 const logger = LoggerUtil.getLogger('DiscordWebhook')
 
-const WEBHOOK_URL = 'https://discord.com/api/webhooks/1311858765586497537/hMETGLLAwpqr1DH2I9kTGeZBDkv10LCsmUF_SvonBFzNBiRNrmNFluLI6Ro6RvEsixFw'
+// Never put a webhook URL in the launcher: anyone can read it in the installed
+// files and post in the channel. To re-enable these logs, send them to an
+// authenticated backend (on zukipalace.theopierne.fr, allowed by the CSP) that
+// posts to Discord, and inform the players of this collection (GDPR: player
+// name, UUID, mods and resource packs).
+const WEBHOOK_URL = process.env.ZUKI_DISCORD_WEBHOOK_URL
 
 exports.sendGameStartingLogToDiscord = async (playerName, mods = [], resourcePacks = []) => {
+    if (!WEBHOOK_URL) {
+        logger.info('Game start logging disabled: no endpoint configured.')
+        return
+    }
+
     const embedColor = mods.length === 0 && resourcePacks.length === 0 ? 5763719 : 15548997
     const message = {
         embeds: [

@@ -68,12 +68,23 @@ function setLaunchPercentage(percent) {
 }
 
 /**
+ * Set the value of the OS (taskbar / dock) progress bar.
+ * 
+ * @param {number} progress Between 0 and 1, -1 to remove it, 2 for an indeterminate state.
+ */
+function setWindowProgressBar(progress) {
+    ipcRenderer.invoke('window:setProgressBar', progress).catch(err => {
+        loggerLanding.warn('Unable to update the window progress bar.', err)
+    })
+}
+
+/**
  * Set the value of the OS progress bar and display that on the UI.
  * 
  * @param {number} percent Percentage (0-100)
  */
 function setDownloadPercentage(percent) {
-    remote.getCurrentWindow().setProgressBar(percent / 100)
+    setWindowProgressBar(percent / 100)
     setLaunchPercentage(percent)
 }
 
@@ -150,7 +161,7 @@ function updateSelectedAccount(authUser) {
             document.getElementById('avatarContainer').style.backgroundImage = `url('https://mc-heads.net/body/${authUser.uuid}/right')`
         }
     }
-    user_text.innerHTML = username
+    user_text.textContent = username
 }
 updateSelectedAccount(ConfigManager.getSelectedAccount())
 
@@ -161,7 +172,7 @@ function updateSelectedServer(serv) {
     }
     ConfigManager.setSelectedServer(serv != null ? serv.rawServer.id : null)
     ConfigManager.save()
-    server_selection_button.innerHTML = '\u2022 ' + (serv != null ? serv.rawServer.name : 'No Server Selected')
+    server_selection_button.textContent = '\u2022 ' + (serv != null ? serv.rawServer.name : 'No Server Selected')
     if (getCurrentView() === VIEWS.settings) {
         animateSettingsTabRefresh()
     }
@@ -263,12 +274,12 @@ const refreshServerStatus = async (fade = false) => {
     if (fade) {
         $('#server_status_wrapper').fadeOut(250, () => {
             document.getElementById('landingPlayerLabel').innerHTML = pLabel
-            document.getElementById('player_count').innerHTML = pVal
+            document.getElementById('player_count').textContent = pVal
             $('#server_status_wrapper').fadeIn(500)
         })
     } else {
         document.getElementById('landingPlayerLabel').innerHTML = pLabel
-        document.getElementById('player_count').innerHTML = pVal
+        document.getElementById('player_count').textContent = pVal
     }
 
 }
@@ -326,12 +337,12 @@ async function asyncSystemScan(effectiveJavaOptions, launchAfter = true) {
             'Installer Java',
             'Installer manuellement'
         )
-        setOverlayHandler(() => {
+        setOverlayHandler(async () => {
             setLaunchDetails('Préparation du téléchargement de Java..')
             toggleOverlay(false)
 
             try {
-                downloadJava(effectiveJavaOptions, launchAfter)
+                await downloadJava(effectiveJavaOptions, launchAfter)
             } catch (err) {
                 loggerLanding.error('Unhandled error in Java Download', err)
                 showLaunchFailure('Erreur lors du lancement', 'Voir la console (CTRL + Shift + i) pour plus de détails.')
@@ -399,17 +410,16 @@ async function downloadJava(effectiveJavaOptions, launchAfter = true) {
 
     if (received != asset.size) {
         loggerLanding.warn(`Java Download: Expected ${asset.size} bytes but received ${received}`)
-        if (!await validateLocalFile(asset.path, asset.algo, asset.hash)) {
-            log.error(`Hashes do not match, ${asset.id} may be corrupted.`)
-
-            // Don't know how this could happen, but report it.
-            throw new Error('Downloaded JDK has bad hash, file may be corrupted.')
-        }
+    }
+    // Always check the hash published with the JDK, not only when the size differs.
+    if (!await validateLocalFile(asset.path, asset.algo, asset.hash)) {
+        loggerLanding.error(`Hashes do not match, ${asset.id} may be corrupted.`)
+        throw new Error('Downloaded JDK has bad hash, file may be corrupted.')
     }
 
     // Extract
     // Show installing progress bar.
-    remote.getCurrentWindow().setProgressBar(2)
+    setWindowProgressBar(2)
 
     // Wait for extration to complete.
     const eLStr = 'Extraction de Java'
@@ -424,21 +434,24 @@ async function downloadJava(effectiveJavaOptions, launchAfter = true) {
         setLaunchDetails(eLStr + dotStr)
     }, 750)
 
-    const newJavaExec = await extractJdk(asset.path)
-
-    // Extraction complete, remove the loading from the OS progress bar.
-    remote.getCurrentWindow().setProgressBar(-1)
+    let newJavaExec
+    try {
+        newJavaExec = await extractJdk(asset.path)
+    } finally {
+        clearInterval(extractListener)
+        // Remove the loading from the OS progress bar.
+        setWindowProgressBar(-1)
+    }
 
     // Extraction completed successfully.
     ConfigManager.setJavaExecutable(ConfigManager.getSelectedServer(), newJavaExec)
     ConfigManager.save()
 
-    clearInterval(extractListener)
     setLaunchDetails('Java installé !')
 
     // TODO Callback hell
     // Refactor the launch functions
-    asyncSystemScan(effectiveJavaOptions, launchAfter)
+    await asyncSystemScan(effectiveJavaOptions, launchAfter)
 
 }
 
@@ -497,7 +510,7 @@ async function dlAsync(login = true) {
 
     fullRepairModule.childProcess.on('error', (err) => {
         loggerLaunchSuite.error('Error during launch', err)
-        showLaunchFailure('Erreur lors du lancement', err.message || 'Voir la console (CTRL + Shift + i) pour plus de détails.')
+        showLaunchFailure('Erreur lors du lancement', escapeHTML(err.message) || 'Voir la console (CTRL + Shift + i) pour plus de détails.')
     })
 
     fullRepairModule.childProcess.on('close', (code, _signal) => {
@@ -541,7 +554,7 @@ async function dlAsync(login = true) {
     }
 
     // Remove download bar.
-    remote.getCurrentWindow().setProgressBar(-1)
+    setWindowProgressBar(-1)
 
     fullRepairModule.destroyReceiver()
 
@@ -570,7 +583,7 @@ async function dlAsync(login = true) {
         }
 
         loggerLaunchSuite.info(`Sending selected account (${authUser.displayName}) to ProcessBuilder.`)
-        let pb = new ProcessBuilder(serv, versionData, modLoaderData, authUser, remote.app.getVersion())
+        let pb = new ProcessBuilder(serv, versionData, modLoaderData, authUser, LauncherRuntime.getVersion())
         setLaunchDetails('Lancement du jeu..')
 
         // const SERVER_JOINED_REGEX = new RegExp(`\\[.+\\]: \\[CHAT\\] ${authUser.displayName} joined the game`)
@@ -626,13 +639,21 @@ async function dlAsync(login = true) {
             // Build Minecraft process.
             proc = pb.build()
 
+            // Keep the launcher running (hidden in the tray if its window is
+            // closed) while the game runs.
+            changeCloseAction('gameLaunch', true)
+
             // Bind listeners to stdout.
             proc.stdout.on('data', tempListener)
             proc.stderr.on('data', gameErrorListener)
-            proc.on('error', error => loggerLaunchSuite.error(error))
+            proc.on('error', error => {
+                loggerLaunchSuite.error(error)
+                changeCloseAction('gameLaunch', false)
+            })
             proc.on('close', (code) => {
                 isGameLaunch = false
                 setLaunchEnabled(!isGameLaunch)
+                changeCloseAction('gameLaunch', false)
                 if (code !== 0) {
                     loggerLaunchSuite.error('Minecraft didn\'t close correctly, code:', code)
                     showLaunchFailure('Minecraft ne s\'est pas fermé correctement.', `Une erreur s'est produite ce qui a entrainé la fermeture de Minecraft, voir la console pour plus d'inforamtions (CTRL + Shift + I) <br>Code de fermeture: <pre>${code}</pre>`)
@@ -647,7 +668,6 @@ async function dlAsync(login = true) {
                 hasRPC = true
                 proc.on('close', () => {
                     loggerLaunchSuite.info('Shutting down Discord Rich Presence..')
-                    changeCloseAction('gameLaunch', false)
                     DiscordWrapper.shutdownRPC()
                     hasRPC = false
                     proc = null
@@ -959,13 +979,16 @@ document.addEventListener('keydown', (e) => {
  * @param {number} index The article index.
  */
 function displayArticle(articleObject, index) {
-    newsArticleTitle.innerHTML = articleObject.title
-    newsArticleTitle.href = articleObject.link
-    newsArticleAuthor.innerHTML = 'par ' + articleObject.author
-    newsArticleDate.innerHTML = articleObject.date
-    newsArticleComments.innerHTML = articleObject.comments
-    newsArticleComments.href = articleObject.commentsLink
-    newsArticleContentScrollable.innerHTML = '<div id="newsArticleContentWrapper"><div class="newsArticleSpacerTop"></div>' + articleObject.content + '<div class="newsArticleSpacerBot"></div></div>'
+    // The article comes from a remote feed: text fields are inserted as text
+    // and the content is sanitized (this window has access to Node.js).
+    newsArticleTitle.textContent = articleObject.title
+    newsArticleTitle.href = toSafeUrl(articleObject.link) ?? '#'
+    newsArticleAuthor.textContent = 'par ' + articleObject.author
+    newsArticleDate.textContent = articleObject.date
+    newsArticleComments.textContent = articleObject.comments
+    newsArticleComments.href = toSafeUrl(articleObject.commentsLink) ?? '#'
+    newsArticleContentScrollable.innerHTML = '<div id="newsArticleContentWrapper"><div class="newsArticleSpacerTop"></div><div class="newsArticleSpacerBot"></div></div>'
+    newsArticleContentScrollable.querySelector('.newsArticleSpacerBot').before(sanitizeHTML(articleObject.content))
     Array.from(newsArticleContentScrollable.getElementsByClassName('bbCodeSpoilerButton')).forEach(v => {
         v.onclick = () => {
             const text = v.parentElement.getElementsByClassName('bbCodeSpoilerText')[0]
@@ -985,6 +1008,12 @@ async function loadNews() {
 
     if (!distroData.rawDistribution.rss) {
         loggerLanding.debug('No RSS feed provided.')
+        return null
+    }
+
+    // The feed content is displayed in the launcher window: only accept HTTPS.
+    if (toSafeUrl(distroData.rawDistribution.rss, ['https:']) == null) {
+        loggerLanding.warn('RSS feed ignored, its URL must use HTTPS.')
         return null
     }
 

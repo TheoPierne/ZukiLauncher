@@ -65,7 +65,7 @@ function bindFileSelectors() {
                 ]
             }
 
-            const res = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), options)
+            const res = await ipcRenderer.invoke('dialog:showOpenDialog', options)
             if (!res.canceled) {
                 ele.previousElementSibling.value = res.filePaths[0]
                 if (isJavaExecSel) {
@@ -340,24 +340,6 @@ settingsNavDone.onclick = () => {
 const msftLoginLogger = LoggerUtil.getLogger('Microsoft Login')
 const msftLogoutLogger = LoggerUtil.getLogger('Microsoft Logout')
 
-// Bind the add mojang account button.
-document.getElementById('settingsAddMojangAccount').onclick = () => {
-    switchView(getCurrentView(), VIEWS.login, 500, 500, () => {
-        loginUsername && (loginUsername.placeholder = Lang.queryJS('login.placeholder.mojangAccount'))
-        loginSubheader && (loginSubheader.innerText = Lang.queryJS('login.mojangAccount'))
-        loginOptions && (loginOptions.style.display = '')
-        loginDisclaimer && (loginDisclaimer.style.display = '')
-        loginFieldPasswordContainer && (loginFieldPasswordContainer.style.display = '')
-        loginEmailError && (loginEmailError.style.opacity = 0)
-        loginPasswordError && (loginPasswordError.style.opacity = 0)
-        loginViewOnCancel = VIEWS.settings
-        loginViewOnSuccess = VIEWS.settings
-        loginCancelEnabled(true)
-        formDisabled(false)
-        isOfficialLogin = true
-    })
-}
-
 // Bind the add unofficial account button.
 document.getElementById('settingsAddUnofficialAccount').onclick = () => {
     switchView(getCurrentView(), VIEWS.login, 500, 500, () => {
@@ -371,7 +353,6 @@ document.getElementById('settingsAddUnofficialAccount').onclick = () => {
         loginViewOnSuccess = VIEWS.settings
         loginCancelEnabled(true)
         formDisabled(false)
-        isOfficialLogin = false
     })
 }
 
@@ -420,8 +401,8 @@ ipcRenderer.on(MSFT_OPCODE.REPLY_LOGIN, (_, ...arguments_) => {
                 console.log('Error getting authCode, is Azure application registered correctly?')
                 console.log('Full query map', queryMap)
                 setOverlayContent(
-                    error,
-                    errorDesc,
+                    escapeHTML(error),
+                    escapeHTML(errorDesc),
                     'OK'
                 )
                 setOverlayHandler(() => {
@@ -432,10 +413,9 @@ ipcRenderer.on(MSFT_OPCODE.REPLY_LOGIN, (_, ...arguments_) => {
             })
         } else {
 
-            msftLoginLogger.info('Acquired authCode, proceeding with authentication.')
+            msftLoginLogger.info('Acquired Microsoft tokens, proceeding with authentication.')
 
-            const authCode = queryMap.code
-            AuthManager.addMicrosoftAccount(authCode).then(value => {
+            AuthManager.addMicrosoftAccount(queryMap.accessToken).then(value => {
                 updateSelectedAccount(value)
                 switchView(getCurrentView(), viewOnClose, 500, 500, async () => {
                     await prepareSettings()
@@ -701,20 +681,20 @@ function populateAuthAccounts() {
         const acc = authAccounts[val]
 
         const accHtml = `
-        <div class="settingsAuthAccount" uuid="${acc.uuid}">
+        <div class="settingsAuthAccount" uuid="${escapeHTML(acc.uuid)}">
             <div class="settingsAuthAccountContainer">
                 <div class="settingsAuthAccountLeft">
-                    <img class="settingsAuthAccountImage" alt="${acc.displayName}" src="https://mc-heads.net/body/${acc.uuid}/60">
+                    <img class="settingsAuthAccountImage" alt="${escapeHTML(acc.displayName)}" src="https://mc-heads.net/body/${escapeHTML(acc.uuid)}/60">
                 </div>
                 <div class="settingsAuthAccountRight">
                     <div class="settingsAuthAccountDetails">
                         <div class="settingsAuthAccountDetailPane">
                             <div class="settingsAuthAccountDetailTitle">Pseudo</div>
-                            <div class="settingsAuthAccountDetailValue">${acc.displayName}</div>
+                            <div class="settingsAuthAccountDetailValue">${escapeHTML(acc.displayName)}</div>
                         </div>
                         <div class="settingsAuthAccountDetailPane">
                             <div class="settingsAuthAccountDetailTitle">UUID</div>
-                            <div class="settingsAuthAccountDetailValue uuid">${acc.uuid}</div>
+                            <div class="settingsAuthAccountDetailValue uuid">${escapeHTML(acc.uuid)}</div>
                         </div>
                     </div>
                 </div>
@@ -818,13 +798,13 @@ function parseModulesForUI(mdls, submodules, servConf) {
 
             if (mdl.getRequired().value) {
 
-                reqMods += `<div id="${mdl.getVersionlessMavenIdentifier()}" class="settingsBaseMod settings${submodules ? 'Sub' : ''}Mod" enabled>
+                reqMods += `<div id="${escapeHTML(mdl.getVersionlessMavenIdentifier())}" class="settingsBaseMod settings${submodules ? 'Sub' : ''}Mod" enabled>
                  <div class="settingsModContent">
                  <div class="settingsModMainWrapper">
                  <div class="settingsModStatus"></div>
                  <div class="settingsModDetails">
-                 <span class="settingsModName">${mdl.rawModule.name}</span>
-                 <span class="settingsModVersion">v${mdl.mavenComponents.version}</span>
+                 <span class="settingsModName">${escapeHTML(mdl.rawModule.name)}</span>
+                 <span class="settingsModVersion">v${escapeHTML(mdl.mavenComponents.version)}</span>
                  </div>
                  </div>
                  <label class="toggleSwitch" reqmod>
@@ -842,17 +822,17 @@ function parseModulesForUI(mdls, submodules, servConf) {
                 const conf = servConf[mdl.getVersionlessMavenIdentifier()]
                 const val = typeof conf === 'object' ? conf.value : conf
 
-                optMods += `<div id="${mdl.getVersionlessMavenIdentifier()}" class="settingsBaseMod settings${submodules ? 'Sub' : ''}Mod" ${val ? 'enabled' : ''}>
+                optMods += `<div id="${escapeHTML(mdl.getVersionlessMavenIdentifier())}" class="settingsBaseMod settings${submodules ? 'Sub' : ''}Mod" ${val ? 'enabled' : ''}>
                  <div class="settingsModContent">
                  <div class="settingsModMainWrapper">
                  <div class="settingsModStatus"></div>
                  <div class="settingsModDetails">
-                 <span class="settingsModName">${mdl.rawModule.name}</span>
-                 <span class="settingsModVersion">v${mdl.mavenComponents.version}</span>
+                 <span class="settingsModName">${escapeHTML(mdl.rawModule.name)}</span>
+                 <span class="settingsModVersion">v${escapeHTML(mdl.mavenComponents.version)}</span>
                  </div>
                  </div>
                  <label class="toggleSwitch">
-                 <input type="checkbox" formod="${mdl.getVersionlessMavenIdentifier()}" ${val ? 'checked' : ''}>
+                 <input type="checkbox" formod="${escapeHTML(mdl.getVersionlessMavenIdentifier())}" ${val ? 'checked' : ''}>
                  <span class="toggleSwitchSlider"></span>
                  </label>
                  </div>
@@ -941,19 +921,19 @@ async function resolveDropinModsForUI() {
     let dropinMods = ''
 
     for (dropin of CACHE_DROPIN_MODS) {
-        dropinMods += `<div id="${dropin.fullName}" class="settingsBaseMod settingsDropinMod" ${!dropin.disabled ? 'enabled' : ''}>
+        dropinMods += `<div id="${escapeHTML(dropin.fullName)}" class="settingsBaseMod settingsDropinMod" ${!dropin.disabled ? 'enabled' : ''}>
          <div class="settingsModContent">
          <div class="settingsModMainWrapper">
          <div class="settingsModStatus"></div>
          <div class="settingsModDetails">
-         <span class="settingsModName">${dropin.name}</span>
+         <span class="settingsModName">${escapeHTML(dropin.name)}</span>
          <div class="settingsDropinRemoveWrapper">
-         <button class="settingsDropinRemoveButton" remmod="${dropin.fullName}">Retirer</button>
+         <button class="settingsDropinRemoveButton" remmod="${escapeHTML(dropin.fullName)}">Retirer</button>
          </div>
          </div>
          </div>
          <label class="toggleSwitch">
-         <input type="checkbox" formod="${dropin.fullName}" dropin ${!dropin.disabled ? 'checked' : ''}>
+         <input type="checkbox" formod="${escapeHTML(dropin.fullName)}" dropin ${!dropin.disabled ? 'checked' : ''}>
          <span class="toggleSwitchSlider"></span>
          </label>
          </div>
@@ -1086,14 +1066,14 @@ function setShadersOptions(arr, selected) {
     cont.innerHTML = ''
     for (let opt of arr) {
         const d = document.createElement('DIV')
-        d.innerHTML = opt.name
+        d.textContent = opt.name
         d.setAttribute('value', opt.fullName)
         if (opt.fullName === selected) {
             d.setAttribute('selected', '')
-            document.getElementById('settingsShadersSelected').innerHTML = opt.name
+            document.getElementById('settingsShadersSelected').textContent = opt.name
         }
         d.addEventListener('click', function (e) {
-            this.parentNode.previousElementSibling.innerHTML = this.innerHTML
+            this.parentNode.previousElementSibling.textContent = this.textContent
             for (let sib of this.parentNode.children) {
                 sib.removeAttribute('selected')
             }
@@ -1152,13 +1132,13 @@ async function loadSelectedServerOnModsTab() {
     const serv = (await DistroAPI.getDistribution()).getServerById(ConfigManager.getSelectedServer())
     for (const el of document.getElementsByClassName('settingsSelServContent')) {
         el.innerHTML = `
-         <img class="serverListingImg" src="${serv.rawServer.icon}"/>
+         <img class="serverListingImg" src="${escapeHTML(serv.rawServer.icon)}"/>
          <div class="serverListingDetails">
-         <span class="serverListingName">${serv.rawServer.name}</span>
-         <span class="serverListingDescription">${serv.rawServer.description}</span>
+         <span class="serverListingName">${escapeHTML(serv.rawServer.name)}</span>
+         <span class="serverListingDescription">${escapeHTML(serv.rawServer.description)}</span>
          <div class="serverListingInfo">
-         <div class="serverListingVersion">${serv.rawServer.minecraftVersion}</div>
-         <div class="serverListingRevision">${serv.rawServer.version}</div>
+         <div class="serverListingVersion">${escapeHTML(serv.rawServer.minecraftVersion)}</div>
+         <div class="serverListingRevision">${escapeHTML(serv.rawServer.version)}</div>
          ${serv.rawServer.mainServer ? `<div class="serverListingStarWrapper">
          <svg id="Layer_1" viewBox="0 0 107.45 104.74" width="20px" height="20px">
          <defs>
@@ -1424,12 +1404,12 @@ async function populateJavaExecDetails(execPath) {
 }
 
 function populateJavaReqDesc(server) {
-    settingsJavaReqDesc.innerHTML = `Nécessite Java ${server.effectiveJavaOptions.suggestedMajor} x64.`
+    settingsJavaReqDesc.textContent = `Nécessite Java ${server.effectiveJavaOptions.suggestedMajor} x64.`
 }
 
 function populateJvmOptsLink(server) {
     const major = server.effectiveJavaOptions.suggestedMajor
-    settingsJvmOptsLink.innerHTML = `Options disponibles pour Java ${major} (HotSpot VM)`
+    settingsJvmOptsLink.textContent = `Options disponibles pour Java ${major} (HotSpot VM)`
 
     if (major >= 12) {
         settingsJvmOptsLink.href = `https://docs.oracle.com/en/java/javase/${major}/docs/specs/man/java.html#extra-options-for-java`
@@ -1501,9 +1481,9 @@ deleteOldDistro.addEventListener('change', async () => {
 })
 
 settingsFreeStorageButton.addEventListener('click', async () => {
-    const freeableSpaceValue = await calculateFreeableSpace(deleteSettings)
+    const { numberOfFiles } = await calculateFreeableSpace(deleteSettings)
 
-    if (freeableSpaceValue === '0.00') {
+    if (numberOfFiles === 0) {
         return
     }
 
@@ -1527,7 +1507,7 @@ settingsFreeStorageButton.addEventListener('click', async () => {
         })
         toggleOverlay(true, true)
 
-        throw err
+        console.error('Error while cleaning old distribution files.', err)
     }
 })
 
@@ -1542,8 +1522,7 @@ const settingsAboutChangelogButton = settingsTabAbout.getElementsByClassName('se
 
 // Bind the devtools toggle button.
 document.getElementById('settingsAboutDevToolsButton').onclick = () => {
-    let window = remote.getCurrentWindow()
-    window.toggleDevTools()
+    ipcRenderer.send('window:toggleDevTools')
 }
 
 /**
@@ -1583,7 +1562,7 @@ function populateVersionInformation(version, valueElement, titleElement, checkEl
  * Retrieve the version information and display it on the UI.
  */
 function populateAboutVersionInformation() {
-    populateVersionInformation(remote.app.getVersion(), document.getElementById('settingsAboutCurrentVersionValue'), document.getElementById('settingsAboutCurrentVersionTitle'), document.getElementById('settingsAboutCurrentVersionCheck'))
+    populateVersionInformation(LauncherRuntime.getVersion(), document.getElementById('settingsAboutCurrentVersionValue'), document.getElementById('settingsAboutCurrentVersionTitle'), document.getElementById('settingsAboutCurrentVersionCheck'))
 }
 
 /**
@@ -1594,7 +1573,7 @@ function populateReleaseNotes() {
     $.ajax({
         url: 'https://github.com/TheoPierne/ZukiLauncher/releases.atom',
         success: (data) => {
-            const version = 'v' + remote.app.getVersion()
+            const version = 'v' + LauncherRuntime.getVersion()
             const entries = $(data).find('entry')
 
             for (let i = 0, entriesLength = entries.length; i < entriesLength; i++) {
@@ -1602,10 +1581,10 @@ function populateReleaseNotes() {
                 let id = entry.find('id').text()
                 id = id.substring(id.lastIndexOf('/') + 1)
 
-                if (version.includes(id)) {
-                    settingsAboutChangelogTitle.innerHTML = entry.find('title').text()
-                    settingsAboutChangelogText.innerHTML = entry.find('content').text()
-                    settingsAboutChangelogButton.href = entry.find('link').attr('href')
+                if (id === version) {
+                    settingsAboutChangelogTitle.textContent = entry.find('title').text()
+                    settingsAboutChangelogText.replaceChildren(sanitizeHTML(entry.find('content').text()))
+                    settingsAboutChangelogButton.href = toSafeUrl(entry.find('link').attr('href')) ?? '#'
                 }
             }
 
@@ -1682,8 +1661,8 @@ function populateSettingsUpdateInformation(data) {
     if (data != null) {
         settingsUpdateTitle.innerHTML = `Nouvelle ${isPrerelease(data.version) ? 'Pre-release' : 'Release'} Disponible`
         settingsUpdateChangelogCont.style.display = null
-        settingsUpdateChangelogTitle.innerHTML = data.releaseName
-        settingsUpdateChangelogText.innerHTML = data.releaseNotes
+        settingsUpdateChangelogTitle.textContent = data.releaseName
+        settingsUpdateChangelogText.replaceChildren(sanitizeHTML(data.releaseNotes))
         populateVersionInformation(data.version, settingsUpdateVersionValue, settingsUpdateVersionTitle, settingsUpdateVersionCheck)
 
         if (process.platform === 'darwin') {
@@ -1696,7 +1675,7 @@ function populateSettingsUpdateInformation(data) {
     } else {
         settingsUpdateTitle.innerHTML = 'Vous utilisez la dernière version'
         settingsUpdateChangelogCont.style.display = 'none'
-        populateVersionInformation(remote.app.getVersion(), settingsUpdateVersionValue, settingsUpdateVersionTitle, settingsUpdateVersionCheck)
+        populateVersionInformation(LauncherRuntime.getVersion(), settingsUpdateVersionValue, settingsUpdateVersionTitle, settingsUpdateVersionCheck)
         settingsUpdateButtonStatus('Vérifier les mises à jour', false, false, () => {
             if (!isDev) {
                 ipcRenderer.send('autoUpdateAction', 'checkForUpdate')

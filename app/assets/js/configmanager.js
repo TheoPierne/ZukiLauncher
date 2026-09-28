@@ -3,13 +3,18 @@ const { LoggerUtil } = require('helios-core')
 const os   = require('os')
 const path = require('path')
 
+const LauncherRuntime = require('./launcherruntime')
+
 const logger = LoggerUtil.getLogger('ConfigManager')
 
 const sysRoot = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Application Support' : process.env.HOME)
 
 const dataPath = path.join(sysRoot, '.zukipalacelauncher')
 
-const launcherDir = require('@electron/remote').app.getPath('userData')
+// Must stay the app's userData directory: that is where config.json has always
+// been stored (and where ipc.js reads it). A config.json left in dataPath is
+// migrated by load() through configPathLEGACY.
+const launcherDir = process.env.ZUKI_LAUNCHER_USER_DATA || LauncherRuntime.getUserDataPath() || dataPath
 
 /**
  * Retrieve the absolute path of the launcher directory.
@@ -53,7 +58,7 @@ exports.getAbsoluteMinRAM = function(ram){
     }
 }
 
-exports.getAbsoluteMaxRAM = function(ram){
+exports.getAbsoluteMaxRAM = function(_ram){
     const mem = os.totalmem()
     const gT16 = mem-(16*1073741824)
     return Math.floor((mem-(gT16 > 0 ? (Number.parseInt(gT16/8) + (16*1073741824)/4) : mem/4))/1073741824)
@@ -105,13 +110,94 @@ const DEFAULT_CONFIG = {
 
 let config = null
 
+// Token Protection
+
+// Account tokens are encrypted with Electron's safeStorage (DPAPI, libsecret...)
+// through the main process (see ipc.js). Encrypted values carry this prefix;
+// when encryption is unavailable, tokens are stored as is.
+const PROTECTED_PREFIX = 'safeStorage:'
+
+// Plaintext -> stored value, so that unchanged tokens are not re-encrypted on every save.
+const protectedValues = new Map()
+
+function getIpcRenderer() {
+    return process.type === 'renderer' ? require('electron').ipcRenderer : null
+}
+
+function protectValue(value) {
+    if (typeof value !== 'string' || value === '' || value.startsWith(PROTECTED_PREFIX)) {
+        return value
+    }
+    if (!protectedValues.has(value)) {
+        const encrypted = getIpcRenderer()?.sendSync('safeStorage:encrypt', value)
+        if (typeof encrypted !== 'string') {
+            return value
+        }
+        protectedValues.set(value, PROTECTED_PREFIX + encrypted)
+    }
+    return protectedValues.get(value)
+}
+
+function unprotectValue(value) {
+    if (typeof value !== 'string' || !value.startsWith(PROTECTED_PREFIX)) {
+        return value
+    }
+    const decrypted = getIpcRenderer()?.sendSync('safeStorage:decrypt', value.slice(PROTECTED_PREFIX.length))
+    if (typeof decrypted !== 'string') {
+        throw new Error('Unable to decrypt a stored token.')
+    }
+    protectedValues.set(decrypted, value)
+    return decrypted
+}
+
+function protectAccount(account) {
+    // Offline accounts only hold a placeholder token.
+    if (account.type === 'unofficial') {
+        return account
+    }
+    const stored = { ...account, accessToken: protectValue(account.accessToken) }
+    if (account.microsoft != null) {
+        stored.microsoft = {
+            ...account.microsoft,
+            access_token: protectValue(account.microsoft.access_token),
+            refresh_token: protectValue(account.microsoft.refresh_token)
+        }
+    }
+    return stored
+}
+
+/**
+ * Decrypt the tokens of the loaded accounts. An account whose tokens cannot be
+ * decrypted (encrypted on another computer or user profile, keyring
+ * unavailable...) is removed: the user has to log in again.
+ */
+function unprotectAccounts() {
+    for (const [uuid, account] of Object.entries(config.authenticationDatabase ?? {})) {
+        try {
+            account.accessToken = unprotectValue(account.accessToken)
+            if (account.microsoft != null) {
+                account.microsoft.access_token = unprotectValue(account.microsoft.access_token)
+                account.microsoft.refresh_token = unprotectValue(account.microsoft.refresh_token)
+            }
+        } catch (err) {
+            logger.warn(`Unable to decrypt the tokens of account ${uuid}, it has to be added again.`, err)
+            exports.removeAuthAccount(uuid)
+        }
+    }
+}
+
 // Persistance Utility Functions
 
 /**
  * Save the current configuration to a file.
  */
 exports.save = function(){
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 4), 'UTF-8')
+    const authenticationDatabase = {}
+    for (const [uuid, account] of Object.entries(config.authenticationDatabase ?? {})) {
+        authenticationDatabase[uuid] = protectAccount(account)
+    }
+    // mode only applies when the file is created, load() handles existing files.
+    fs.writeFileSync(configPath, JSON.stringify({ ...config, authenticationDatabase }, null, 4), { encoding: 'UTF-8', mode: 0o600 })
 }
 
 /**
@@ -149,7 +235,16 @@ exports.load = function(){
         }
         if(doValidate){
             config = validateKeySet(DEFAULT_CONFIG, config)
+            unprotectAccounts()
             exports.save()
+        }
+    }
+    // The config holds the account tokens: readable by its owner only.
+    if(process.platform !== 'win32'){
+        try {
+            fs.chmodSync(configPath, 0o600)
+        } catch (err) {
+            logger.warn('Unable to restrict the permissions of the configuration file.', err)
         }
     }
     logger.info('Successfully Loaded')
@@ -282,7 +377,7 @@ exports.setClientToken = function(clientToken){
  * @returns {string} The ID of the selected serverpack.
  */
 exports.getSelectedServer = function(def = false){
-    return !def ? config.selectedServer : DEFAULT_CONFIG.clientToken
+    return !def ? config.selectedServer : DEFAULT_CONFIG.selectedServer
 }
 
 /**
@@ -311,42 +406,6 @@ exports.getAuthAccounts = function(){
  * @returns {Object} The authenticated account with the given uuid.
  */
 exports.getAuthAccount = function(uuid){
-    return config.authenticationDatabase[uuid]
-}
-
-/**
- * Update the access token of an authenticated mojang account.
- * 
- * @param {string} uuid The uuid of the authenticated account.
- * @param {string} accessToken The new Access Token.
- * 
- * @returns {Object} The authenticated account object created by this action.
- */
-exports.updateMojangAuthAccount = function(uuid, accessToken){
-    config.authenticationDatabase[uuid].accessToken = accessToken
-    config.authenticationDatabase[uuid].type = 'mojang' // For gradual conversion.
-    return config.authenticationDatabase[uuid]
-}
-
-/**
- * Adds an authenticated mojang account to the database to be stored.
- * 
- * @param {string} uuid The uuid of the authenticated account.
- * @param {string} accessToken The accessToken of the authenticated account.
- * @param {string} username The username (usually email) of the authenticated account.
- * @param {string} displayName The in game name of the authenticated account.
- * 
- * @returns {Object} The authenticated account object created by this action.
- */
-exports.addMojangAuthAccount = function(uuid, accessToken, username, displayName){
-    config.selectedAccount = uuid
-    config.authenticationDatabase[uuid] = {
-        type: 'mojang',
-        accessToken,
-        username: username.trim(),
-        uuid: uuid.trim(),
-        displayName: displayName.trim()
-    }
     return config.authenticationDatabase[uuid]
 }
 

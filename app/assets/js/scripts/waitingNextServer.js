@@ -16,9 +16,10 @@
         waitingEndDescription
     } = await fetchServerDates()
 
-    waitingTitleEl.innerText = waitingTitle
-    waitingDescriptionEl.innerText = waitingDescription
-    waitingEndDescriptionEl.innerText = waitingEndDescription
+    // Keep the default texts from waitingNextServer.ejs when dates.json is unavailable.
+    if (waitingTitle) waitingTitleEl.innerText = waitingTitle
+    if (waitingDescription) waitingDescriptionEl.innerText = waitingDescription
+    if (waitingEndDescription) waitingEndDescriptionEl.innerText = waitingEndDescription
 
     // Date de l'ouverture du prochain serveur
     const openingDate = new Date(nextServerOpeningDate).getTime()
