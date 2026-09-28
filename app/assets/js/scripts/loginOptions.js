@@ -1,11 +1,9 @@
 const loginOptionsCancelContainer = document.getElementById('loginOptionCancelContainer')
 const loginOptionMicrosoft = document.getElementById('loginOptionMicrosoft')
-const loginOptionMojang = document.getElementById('loginOptionMojang')
 const loginOptionFakeAccount = document.getElementById('loginOptionFakeAccount')
 const loginOptionsCancelButton = document.getElementById('loginOptionCancelButton')
 
 let loginOptionsCancellable = false
-let isOfficialLogin = true
 
 let loginOptionsViewOnLoginSuccess
 let loginOptionsViewOnLoginCancel
@@ -30,18 +28,6 @@ loginOptionMicrosoft.onclick = (e) => {
     })
 }
 
-loginOptionMojang.onclick = () => {
-    switchView(getCurrentView(), VIEWS.login, 500, 500, () => {
-        loginFieldPasswordContainer && (loginFieldPasswordContainer.style.display = '')
-        loginEmailError && (loginEmailError.style.opacity = 0)
-        loginPasswordError && (loginPasswordError.style.opacity = 0)
-        loginViewOnSuccess = loginOptionsViewOnLoginSuccess
-        loginViewOnCancel = loginOptionsViewOnLoginCancel
-        loginCancelEnabled(true)
-        isOfficialLogin = true
-    })
-}
-
 loginOptionFakeAccount.onclick = () => {
     switchView(getCurrentView(), VIEWS.login, 500, 500, () => {
         loginUsername && (loginUsername.placeholder = Lang.queryJS('login.placeholder.unofficialAccount'))
@@ -53,13 +39,12 @@ loginOptionFakeAccount.onclick = () => {
         loginViewOnSuccess = loginOptionsViewOnLoginSuccess
         loginViewOnCancel = loginOptionsViewOnLoginCancel
         loginCancelEnabled(true)
-        isOfficialLogin = false
     })
 }
 
 loginOptionsCancelButton.onclick = () => {
     switchView(getCurrentView(), loginOptionsViewOnCancel, 500, 500, () => {
-        // Clear login values (Mojang login)
+        // Clear login values (free account form).
         // No cleanup needed for Microsoft.
         loginUsername.value = ''
         loginPassword.value = ''

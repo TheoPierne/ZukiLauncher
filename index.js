@@ -1,22 +1,48 @@
-const remoteMain = require('@electron/remote/main')
-remoteMain.initialize()
-
 // Requirements
-const { app, BrowserWindow, ipcMain, Menu, shell, nativeImage, Tray } = require('electron')
-const autoUpdater                       = require('electron-updater').autoUpdater
-const ejse                              = require('ejs-electron')
-const fs                                = require('fs')
-const isDev                             = require('./app/assets/js/isdev')
-const path                              = require('path')
-const semver                            = require('semver')
-const { pathToFileURL }                 = require('url')
-const { AZURE_CLIENT_ID, MSFT_OPCODE, MSFT_REPLY_TYPE, MSFT_ERROR, SHELL_OPCODE } = require('./app/assets/js/ipcconstants')
+const {
+    app,
+    BrowserWindow,
+    ipcMain,
+    Menu,
+    shell,
+    nativeImage,
+    Tray,
+    session
+} = require('electron')
+const { autoUpdater } = require('electron-updater')
+const crypto = require('crypto')
+const ejse = require('ejs-electron')
+const fs = require('fs')
+const isDev = require('./app/assets/js/isdev')
+const path = require('path')
+const semver = require('semver')
+const { pathToFileURL } = require('url')
+const {
+    AZURE_CLIENT_ID,
+    MSFT_OPCODE,
+    MSFT_REPLY_TYPE,
+    MSFT_ERROR
+} = require('./app/assets/js/ipcconstants')
+const { setupIpcHandlers } = require('./ipc')
 
 let minimizeOnClose = false
 let isGameLaunch = false
+// Set when the application really quits (tray, menu, update install...), so
+// that the window is not just hidden while the game is running.
+let isQuitting = false
+let autoUpdaterListenersAdded = false
+
+/**
+ * Send an auto update notification to the launcher window, if it is open.
+ */
+function sendAutoUpdateNotification(...args) {
+    if (win != null && !win.isDestroyed()) {
+        win.webContents.send('autoUpdateNotification', ...args)
+    }
+}
 
 // Setup auto updater.
-function initAutoUpdater(event, data) {
+function initAutoUpdater(data) {
 
     if(data){
         autoUpdater.allowPrerelease = true
@@ -32,21 +58,29 @@ function initAutoUpdater(event, data) {
     if(process.platform === 'darwin'){
         autoUpdater.autoDownload = false
     }
+
+    // The window can be closed and re-created (tray): add the listeners only
+    // once, they notify the current window.
+    if(autoUpdaterListenersAdded){
+        return
+    }
+    autoUpdaterListenersAdded = true
+
     autoUpdater.on('update-available', (info) => {
-        event.sender.send('autoUpdateNotification', 'update-available', info)
+        sendAutoUpdateNotification('update-available', info)
     })
     autoUpdater.on('update-downloaded', (info) => {
-        event.sender.send('autoUpdateNotification', 'update-downloaded', info)
+        sendAutoUpdateNotification('update-downloaded', info)
     })
     autoUpdater.on('update-not-available', (info) => {
-        event.sender.send('autoUpdateNotification', 'update-not-available', info)
+        sendAutoUpdateNotification('update-not-available', info)
     })
     autoUpdater.on('checking-for-update', () => {
-        event.sender.send('autoUpdateNotification', 'checking-for-update')
+        sendAutoUpdateNotification('checking-for-update')
     })
     autoUpdater.on('error', (err) => {
-        event.sender.send('autoUpdateNotification', 'realerror', err)
-    }) 
+        sendAutoUpdateNotification('realerror', err)
+    })
 }
 
 // Open channel to listen for update actions.
@@ -54,7 +88,7 @@ ipcMain.on('autoUpdateAction', (event, arg, data) => {
     switch(arg){
         case 'initAutoUpdater':
             console.log('Initializing auto updater.')
-            initAutoUpdater(event, data)
+            initAutoUpdater(data)
             event.sender.send('autoUpdateNotification', 'ready')
             break
         case 'checkForUpdate':
@@ -99,26 +133,43 @@ ipcMain.on('onCloseAction', (event, arg, res) => {
     }
 })
 
-// Handle trash item.
-ipcMain.handle(SHELL_OPCODE.TRASH_ITEM, async (event, ...args) => {
-    try {
-        await shell.trashItem(args[0])
-        return {
-            result: true
-        }
-    } catch(error) {
-        return {
-            result: false,
-            error: error
-        }
-    }
-})
-
 // Disable hardware acceleration.
 // https://electronjs.org/docs/tutorial/offscreen-rendering
 app.disableHardwareAcceleration()
 
-const REDIRECT_URI_PREFIX = 'https://login.microsoftonline.com/common/oauth2/nativeclient?'
+const REDIRECT_URI = 'https://login.microsoftonline.com/common/oauth2/nativeclient'
+const REDIRECT_URI_PREFIX = REDIRECT_URI + '?'
+const MSFT_TOKEN_ENDPOINT = 'https://login.microsoftonline.com/consumers/oauth2/v2.0/token'
+
+/**
+ * Exchange the authorization code for Microsoft tokens (OAuth PKCE). Done here
+ * because the main process is the only one to know the code verifier. Same
+ * request as helios-core's MicrosoftAuth.getAccessToken, plus code_verifier.
+ *
+ * @param {string} code The authorization code.
+ * @param {string} codeVerifier The PKCE code verifier of this login attempt.
+ * @returns {Promise<Object>} The token response (access_token, refresh_token, expires_in...).
+ */
+async function exchangeMicrosoftAuthCode(code, codeVerifier) {
+    const res = await fetch(MSFT_TOKEN_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            client_id: AZURE_CLIENT_ID,
+            scope: 'XboxLive.signin offline_access',
+            redirect_uri: REDIRECT_URI,
+            grant_type: 'authorization_code',
+            code,
+            code_verifier: codeVerifier
+        }),
+        signal: AbortSignal.timeout(15000)
+    })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok || typeof body.access_token !== 'string' || typeof body.refresh_token !== 'string') {
+        throw new Error(`Microsoft token request failed (HTTP ${res.status}${body.error ? `, ${body.error}` : ''})`)
+    }
+    return body
+}
 
 // Microsoft Auth Login
 let msftAuthWindow
@@ -133,13 +184,25 @@ ipcMain.on(MSFT_OPCODE.OPEN_LOGIN, (ipcEvent, ...arguments_) => {
     msftAuthSuccess = false
     msftAuthViewSuccess = arguments_[0]
     msftAuthViewOnClose = arguments_[1]
+    // state ties the redirect to this login attempt, PKCE ties the authorization
+    // code to this launcher: the code verifier never leaves the main process.
+    const state = crypto.randomBytes(16).toString('base64url')
+    const codeVerifier = crypto.randomBytes(32).toString('base64url')
+    const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url')
     msftAuthWindow = new BrowserWindow({
         title: 'Connexion avec Microsoft',
         backgroundColor: '#222222',
         width: 520,
         height: 600,
         frame: true,
-        icon: getPlatformIcon('ZukiLogo')
+        icon: getPlatformIcon('ZukiLogo'),
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            sandbox: true,
+            webSecurity: true,
+            allowRunningInsecureContent: false
+        }
     })
 
     msftAuthWindow.on('closed', () => {
@@ -160,16 +223,34 @@ ipcMain.on(MSFT_OPCODE.OPEN_LOGIN, (ipcEvent, ...arguments_) => {
                 queryMap[k] = v
             })
 
-            ipcEvent.reply(MSFT_OPCODE.REPLY_LOGIN, MSFT_REPLY_TYPE.SUCCESS, queryMap, msftAuthViewSuccess)
-
             msftAuthSuccess = true
             msftAuthWindow.close()
             msftAuthWindow = null
+
+            if (queryMap.state !== state) {
+                console.error('Microsoft login: unexpected state, response ignored.')
+                ipcEvent.reply(MSFT_OPCODE.REPLY_LOGIN, MSFT_REPLY_TYPE.ERROR, MSFT_ERROR.FAILED, msftAuthViewOnClose)
+                return
+            }
+
+            if (queryMap.error != null) {
+                // Error returned by Microsoft, displayed by the renderer.
+                ipcEvent.reply(MSFT_OPCODE.REPLY_LOGIN, MSFT_REPLY_TYPE.SUCCESS, { error: queryMap.error, error_description: queryMap.error_description }, msftAuthViewSuccess)
+                return
+            }
+
+            exchangeMicrosoftAuthCode(queryMap.code, codeVerifier).then(accessToken => {
+                ipcEvent.reply(MSFT_OPCODE.REPLY_LOGIN, MSFT_REPLY_TYPE.SUCCESS, { accessToken }, msftAuthViewSuccess)
+            }).catch(error => {
+                console.error('Microsoft login: unable to get the tokens.', error)
+                ipcEvent.reply(MSFT_OPCODE.REPLY_LOGIN, MSFT_REPLY_TYPE.ERROR, MSFT_ERROR.FAILED, msftAuthViewOnClose)
+            })
         }
     })
 
+    msftAuthWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
     msftAuthWindow.removeMenu()
-    msftAuthWindow.loadURL(`https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?prompt=select_account&client_id=${AZURE_CLIENT_ID}&response_type=code&scope=XboxLive.signin%20offline_access&redirect_uri=https://login.microsoftonline.com/common/oauth2/nativeclient`)
+    msftAuthWindow.loadURL(`https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?prompt=select_account&client_id=${AZURE_CLIENT_ID}&response_type=code&scope=XboxLive.signin%20offline_access&redirect_uri=${REDIRECT_URI}&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`)
 })
 
 // Microsoft Auth Logout
@@ -190,7 +271,14 @@ ipcMain.on(MSFT_OPCODE.OPEN_LOGOUT, (ipcEvent, uuid, isLastAccount) => {
         width: 520,
         height: 600,
         frame: true,
-        icon: getPlatformIcon('ZukiLogo')
+        icon: getPlatformIcon('ZukiLogo'),
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            sandbox: true,
+            webSecurity: true,
+            allowRunningInsecureContent: false
+        }
     })
 
     msftLogoutWindow.on('closed', () => {
@@ -223,6 +311,7 @@ ipcMain.on(MSFT_OPCODE.OPEN_LOGOUT, (ipcEvent, uuid, isLastAccount) => {
         }
     })
     
+    msftLogoutWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
     msftLogoutWindow.removeMenu()
     msftLogoutWindow.loadURL('https://login.microsoftonline.com/common/oauth2/v2.0/logout')
 })
@@ -276,6 +365,18 @@ function createTray () {
     })
 }
 
+function isSafeExternalUrl(url) {
+    try {
+        const parsed = new URL(url)
+        if (['https:', 'mailto:'].includes(parsed.protocol)) {
+            return true
+        }
+        return parsed.protocol === 'http:' && ['localhost', '127.0.0.1', '::1'].includes(parsed.hostname)
+    } catch {
+        return false
+    }
+}
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win
@@ -295,19 +396,60 @@ function createWindow() {
             disableBlinkFeatures: 'Auxclick',
             preload: path.join(__dirname, 'app', 'assets', 'js', 'preloader.js'),
             nodeIntegration: true,
-            contextIsolation: false
+            // Legacy compatibility: renderer scripts still consume constructors/prototypes
+            // from Helios and the distribution model. Keep this false until those flows
+            // are moved behind DTO-based IPC APIs.
+            contextIsolation: false,
+            sandbox: false,
+            webSecurity: true,
+            allowRunningInsecureContent: false,
+            devTools: isDev,
+            spellcheck: false,
+            additionalArguments: [
+                `--launcher-runtime=${Buffer.from(JSON.stringify({
+                    version: app.getVersion(),
+                    platform: process.platform,
+                    arch: process.arch,
+                    isDev,
+                    appRoot: path.join(__dirname, 'app'),
+                    paths: {
+                        userData: app.getPath('userData'),
+                        temp: app.getPath('temp'),
+                        home: app.getPath('home'),
+                        desktop: app.getPath('desktop')
+                    }
+                })).toString('base64url')}`
+            ]
         },
         backgroundColor: '#171614'
     })
-
-    remoteMain.enable(win.webContents)
 
     ejse.data('bkid', Math.floor((Math.random() * fs.readdirSync(path.join(__dirname, 'app', 'assets', 'images', 'backgrounds')).length)))
 
     win.loadURL(pathToFileURL(path.join(__dirname, 'app', 'app.ejs')).toString())
 
-    win.webContents.on('new-window', event => {
-        event.preventDefault()
+    win.webContents.setWindowOpenHandler(({ url }) => {
+        if (isSafeExternalUrl(url)) {
+            shell.openExternal(url).catch(() => {})
+        }
+        return { action: 'deny' }
+    })
+
+    win.webContents.on('will-navigate', (event, url) => {
+        const localUrl = pathToFileURL(path.join(__dirname, 'app', 'app.ejs')).toString()
+        // This window has access to Node.js: only the launcher page may be
+        // loaded in it, any other page (local files included) is refused.
+        if (url !== localUrl) {
+            event.preventDefault()
+            if (isSafeExternalUrl(url)) {
+                shell.openExternal(url).catch(() => {})
+            }
+        }
+    })
+
+    // Lets the renderer display its warning message in the console.
+    win.webContents.on('devtools-opened', () => {
+        win.webContents.send('window:devtoolsOpened')
     })
 
     win.removeMenu()
@@ -315,7 +457,9 @@ function createWindow() {
     win.resizable = true
 
     win.on('close', e => {
-        if (isGameLaunch) {
+        // While the game is running, keep the launcher alive in the tray,
+        // unless the user really quits it.
+        if (isGameLaunch && !isQuitting) {
             e.preventDefault()
             win.hide()
         }
@@ -406,10 +550,44 @@ function getPlatformIcon(filename){
     return path.join(__dirname, 'app', 'assets', 'images', `${filename}.${ext}`)
 }
 
-app.on('ready', createWindow)
-app.on('ready', createMenu)
-app.on('ready', () => {
-    app.commandLine.appendSwitch('unsafely-treat-insecure-origin-as-secure', 'http://51.77.201.23/')
+// A second launcher would share the same config and game files: keep a single
+// instance and bring its window back instead.
+const gotSingleInstanceLock = app.requestSingleInstanceLock()
+
+if (!gotSingleInstanceLock) {
+    app.quit()
+} else {
+    app.on('second-instance', () => {
+        if (!app.isReady()) {
+            return
+        }
+        if (win == null) {
+            createWindow()
+            return
+        }
+        if (win.isMinimized()) {
+            win.restore()
+        }
+        win.show()
+        win.focus()
+    })
+
+    app.whenReady().then(() => {
+        setupIpcHandlers(app)
+
+        session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
+            callback(false)
+        })
+
+        session.defaultSession.setPermissionCheckHandler(() => false)
+
+        createMenu()
+        createWindow()
+    })
+}
+
+app.on('before-quit', () => {
+    isQuitting = true
 })
 
 app.on('window-all-closed', () => {

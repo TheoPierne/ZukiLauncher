@@ -2,9 +2,8 @@
 * Script for login.ejs
 */
 // Validation Regexes.
-const validUsername         = /^[a-zA-Z0-9_]{1,16}$/
-const basicEmail            = /^\S+@\S+\.\S+$/
-//const validEmail          = /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i
+// Minecraft player names: 3 to 16 letters, digits or underscores.
+const validUsername         = /^[a-zA-Z0-9_]{3,16}$/
 
 // Login Elements
 const loginCancelContainer = document.getElementById('loginCancelContainer')
@@ -21,11 +20,6 @@ const checkmarkContainer = document.getElementById('checkmarkContainer')
 const loginRememberOption = document.getElementById('loginRememberOption')
 const loginButton = document.getElementById('loginButton')
 const loginForm = document.getElementById('loginForm')
-
-// Control variables.
-let lu = false, lp = false
-
-
 
 /**
 * Show a login error.
@@ -52,65 +46,34 @@ function shakeError(element){
 }
 
 /**
-* Validate that an email field is neither empty nor invalid.
-* 
-* @param {string} value The email value.
+* Validate that the username field contains a valid player name.
+*
+* @param {string} value The username value.
 */
-function validateEmail(value){
+function validateUsername(value){
     if(value){
-        if(!basicEmail.test(value) && !validUsername.test(value)){
+        if(!validUsername.test(value)){
             showError(loginEmailError, Lang.queryJS('login.error.invalidValue'))
             loginDisabled(true)
-            lu = false
         } else {
             loginEmailError.style.opacity = 0
-            lu = true
-            if(lp || !isOfficialLogin){
-                loginDisabled(false)
-            }
-        }
-    } else {
-        lu = false
-        showError(loginEmailError, Lang.queryJS('login.error.requiredValue'))
-        loginDisabled(true)
-    }
-}
-
-/**
-* Validate that the password field is not empty.
-* 
-* @param {string} value The password value.
-*/
-function validatePassword(value){
-    if(value){
-        loginPasswordError.style.opacity = 0
-        lp = true
-        if(lu){
             loginDisabled(false)
         }
     } else {
-        lp = false
-        showError(loginPasswordError, Lang.queryJS('login.error.invalidValue'))
+        showError(loginEmailError, Lang.queryJS('login.error.requiredValue'))
         loginDisabled(true)
     }
 }
 
 // Emphasize errors with shake when focus is lost.
 loginUsername.addEventListener('focusout', (e) => {
-    validateEmail(e.target.value)
+    validateUsername(e.target.value)
     shakeError(loginEmailError)
 })
-loginPassword.addEventListener('focusout', (e) => {
-    validatePassword(e.target.value)
-    shakeError(loginPasswordError)
-})
 
-// Validate input for each field.
+// Validate input.
 loginUsername.addEventListener('input', (e) => {
-    validateEmail(e.target.value)
-})
-loginPassword.addEventListener('input', (e) => {
-    validatePassword(e.target.value)
+    validateUsername(e.target.value)
 })
 
 /**
@@ -192,99 +155,50 @@ loginButton.addEventListener('click', () => {
     // Show loading stuff.
     loginLoading(true)
 
-    if (isOfficialLogin) {
-        AuthManager.addMojangAccount(loginUsername.value, loginPassword.value).then((value) => {
-            updateSelectedAccount(value)
-            loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.loggingIn'), Lang.queryJS('login.success'))
-            $('.circle-loader').toggleClass('load-complete')
-            $('.checkmark').toggle()
-            setTimeout(() => {
-                switchView(VIEWS.login, loginViewOnSuccess, 500, 500, async () => {
-                // Temporary workaround
-                    if(loginViewOnSuccess === VIEWS.settings){
-                        await prepareSettings()
-                    }
-                    loginViewOnSuccess = VIEWS.landing // Reset this for good measure.
-                    loginCancelEnabled(false) // Reset this for good measure.
-                    loginViewCancelHandler = null // Reset this for good measure.
-                    loginUsername.value = ''
-                    loginPassword.value = ''
-                    $('.circle-loader').toggleClass('load-complete')
-                    $('.checkmark').toggle()
-                    loginLoading(false)
-                    loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.success'), Lang.queryJS('login.login'))
-                    formDisabled(false)
-                })
-            }, 1000)
-        }).catch((displayableError) => {
-            loginLoading(false)
-
-            let actualDisplayableError
-            if(isDisplayableError(displayableError)) {
-                msftLoginLogger.error('Error while logging in.', displayableError)
-                actualDisplayableError = displayableError
-            } else {
-            // Uh oh.
-                msftLoginLogger.error('Unhandled error during login.', displayableError)
-                actualDisplayableError = {
-                    title: 'Erreur inconnue lors de la connexion',
-                    desc: 'Une erreur inconnue s\'est produite. Veuillez consulter la console pour plus de détails.'
+    AuthManager.addUnofficalAccount(loginUsername.value).then(value => {
+        updateSelectedAccount(value)
+        loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.loggingIn'), Lang.queryJS('login.success'))
+        $('.circle-loader').toggleClass('load-complete')
+        $('.checkmark').toggle()
+        setTimeout(() => {
+            switchView(VIEWS.login, loginViewOnSuccess, 500, 500, () => {
+            // Temporary workaround
+                if(loginViewOnSuccess === VIEWS.settings){
+                    prepareSettings()
                 }
-            }
-
-            setOverlayContent(actualDisplayableError.title, actualDisplayableError.desc, Lang.queryJS('login.tryAgain'))
-            setOverlayHandler(() => {
+                loginViewOnSuccess = VIEWS.landing // Reset this for good measure.
+                loginCancelEnabled(false) // Reset this for good measure.
+                loginViewCancelHandler = null // Reset this for good measure.
+                loginUsername.value = ''
+                $('.circle-loader').toggleClass('load-complete')
+                $('.checkmark').toggle()
+                loginLoading(false)
+                loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.success'), Lang.queryJS('login.login'))
                 formDisabled(false)
-                toggleOverlay(false)
             })
-            toggleOverlay(true)
-        })
-    } else {
-        AuthManager.addUnofficalAccount(loginUsername.value).then(value => {
-            updateSelectedAccount(value)
-            loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.loggingIn'), Lang.queryJS('login.success'))
-            $('.circle-loader').toggleClass('load-complete')
-            $('.checkmark').toggle()
-            setTimeout(() => {
-                switchView(VIEWS.login, loginViewOnSuccess, 500, 500, () => {
-                // Temporary workaround
-                    if(loginViewOnSuccess === VIEWS.settings){
-                        prepareSettings()
-                    }
-                    loginViewOnSuccess = VIEWS.landing // Reset this for good measure.
-                    loginCancelEnabled(false) // Reset this for good measure.
-                    loginViewCancelHandler = null // Reset this for good measure.
-                    loginUsername.value = ''
-                    $('.circle-loader').toggleClass('load-complete')
-                    $('.checkmark').toggle()
-                    loginLoading(false)
-                    loginButton.innerHTML = loginButton.innerHTML.replace(Lang.queryJS('login.success'), Lang.queryJS('login.login'))
-                    formDisabled(false)
-                })
-            }, 1000)
-        }).catch(displayableError => {
-            loginLoading(false)
+        }, 1000)
+    }).catch(displayableError => {
+        loginLoading(false)
 
-            let actualDisplayableError
-            if(isDisplayableError(displayableError)) {
-                msftLoginLogger.error('Error while logging in.', displayableError)
-                actualDisplayableError = displayableError
-            } else {
-            // Uh oh.
-                msftLoginLogger.error('Unhandled error during login.', displayableError)
-                actualDisplayableError = {
-                    title: 'Erreur inconnue lors de la création du compte',
-                    desc: 'Une erreur inconnue s\'est produite. Veuillez consulter la console pour plus de détails.'
-                }
+        let actualDisplayableError
+        if(isDisplayableError(displayableError)) {
+            msftLoginLogger.error('Error while logging in.', displayableError)
+            actualDisplayableError = displayableError
+        } else {
+        // Uh oh.
+            msftLoginLogger.error('Unhandled error during login.', displayableError)
+            actualDisplayableError = {
+                title: 'Erreur inconnue lors de la création du compte',
+                desc: 'Une erreur inconnue s\'est produite. Veuillez consulter la console pour plus de détails.'
             }
+        }
 
-            setOverlayContent(actualDisplayableError.title, actualDisplayableError.desc, Lang.queryJS('login.tryAgain'))
-            setOverlayHandler(() => {
-                formDisabled(false)
-                toggleOverlay(false)
-            })
-            toggleOverlay(true)
+        setOverlayContent(actualDisplayableError.title, actualDisplayableError.desc, Lang.queryJS('login.tryAgain'))
+        setOverlayHandler(() => {
+            formDisabled(false)
+            toggleOverlay(false)
         })
-    }
+        toggleOverlay(true)
+    })
 
 })

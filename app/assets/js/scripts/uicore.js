@@ -7,8 +7,9 @@
 // Requirements
 const $                              = require('jquery')
 const { ipcRenderer, shell, webFrame, clipboard } = require('electron')
-const remote                         = require('@electron/remote')
 const isDev                          = require('./assets/js/isdev')
+const LauncherRuntime                = require('./assets/js/launcherruntime')
+const { escapeHTML, sanitizeHTML, toSafeUrl } = require('./assets/js/htmlsanitizer')
 const { LoggerUtil }                 = require('helios-core')
 
 const loggerUICore             = LoggerUtil.getLogger('UICore')
@@ -28,7 +29,7 @@ window.eval = global.eval = function () {
 }
 
 // Display warning when devtools window is opened.
-remote.getCurrentWebContents().on('devtools-opened', () => {
+ipcRenderer.on('window:devtoolsOpened', () => {
     console.log('%cLa console est sombre et pleine de terreurs.', 'color: white; -webkit-text-stroke: 4px #a02d2a; font-size: 60px; font-weight: bold')
     console.log('%cSi on vous a dit de coller quelque chose ici, vous êtes victime d\'une arnaque.', 'font-size: 16px')
     console.log('%cÀ moins que vous ne sachiez exactement ce que vous faites, fermez cette fenêtre.', 'font-size: 16px')
@@ -52,7 +53,12 @@ if(!isDev){
                 loggerAutoUpdater.info('New update available', info.version)
                 
                 if(process.platform === 'darwin'){
-                    info.darwindownload = `https://github.com/TheoPierne/ZukiLauncher/releases/download/v${info.version}/Zuki-Launcher-setup-${info.version}${process.arch === 'arm64' ? '-arm64' : '-x64'}.dmg`
+                    // DMG of this architecture listed in the update info (the file
+                    // name follows electron-builder.yml), or the release page.
+                    const dmg = info.files?.find(file => file.url.endsWith('.dmg') && file.url.includes(process.arch === 'arm64' ? 'arm64' : 'x64'))
+                    info.darwindownload = dmg != null
+                        ? `https://github.com/TheoPierne/ZukiLauncher/releases/download/v${info.version}/${encodeURIComponent(dmg.url)}`
+                        : `https://github.com/TheoPierne/ZukiLauncher/releases/tag/v${info.version}`
                 }
 
                 updateAvailable = true
@@ -146,13 +152,14 @@ function showUpdateUI(info){
         }
     } else if (currentView === VIEWS.waitingNextServer) {
         document.getElementById('waitingNextServerUpdateLauncher').style.display = 'block'
-        document.getElementById('waitingNextServerUpdateLauncher').addEventListener('click', () => {
+        // onclick, not addEventListener: this function runs on each update check.
+        document.getElementById('waitingNextServerUpdateLauncher').onclick = () => {
             if (!isDev) {
                 ipcRenderer.send('autoUpdateAction', 'installUpdateNow')
             } else {
                 console.error('Cannot install updates in development environment.')
             }
-        })
+        }
     }
 }
 
@@ -168,20 +175,14 @@ document.addEventListener('readystatechange', function () {
         // Bind close button.
         Array.from(document.getElementsByClassName('fCb')).map((val) => {
             val.addEventListener('click', e => {
-                const window = remote.getCurrentWindow()
-                window.close()
+                ipcRenderer.send('window:close')
             })
         })
 
         // Bind restore down button.
         Array.from(document.getElementsByClassName('fRb')).map((val) => {
             val.addEventListener('click', e => {
-                const window = remote.getCurrentWindow()
-                if(window.isMaximized()){
-                    window.unmaximize()
-                } else {
-                    window.maximize()
-                }
+                ipcRenderer.send('window:maximizeToggle')
                 document.activeElement.blur()
             })
         })
@@ -189,8 +190,7 @@ document.addEventListener('readystatechange', function () {
         // Bind minimize button.
         Array.from(document.getElementsByClassName('fMb')).map((val) => {
             val.addEventListener('click', e => {
-                const window = remote.getCurrentWindow()
-                window.minimize()
+                ipcRenderer.send('window:minimize')
                 document.activeElement.blur()
             })
         })
@@ -236,8 +236,7 @@ $(document).on('click', 'a[href^="http"]', function(event) {
  */
 document.addEventListener('keydown', function (e) {
     if((e.key === 'I' || e.key === 'i') && e.ctrlKey && e.shiftKey){
-        let window = remote.getCurrentWindow()
-        window.toggleDevTools()
+        ipcRenderer.send('window:toggleDevTools')
     }
 })
 

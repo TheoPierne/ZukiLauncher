@@ -67,10 +67,10 @@ function getCurrentView(){
 * Change the image background every minute randomly  
 */
 function changeBackgroundImage(){
-    document.body.style.backgroundImage = `url('assets/images/backgrounds/${document.body.getAttribute('bkid')}.jpg'`
+    document.body.style.backgroundImage = `url('assets/images/backgrounds/${document.body.getAttribute('bkid')}.jpg')`
     const backgroundimageLength = readdirSync(path.join(__dirname, 'assets', 'images', 'backgrounds')).length
     setInterval(() => {
-        document.body.style.backgroundImage = `url('assets/images/backgrounds/${Math.floor(Math.random() * backgroundimageLength)}.jpg'`
+        document.body.style.backgroundImage = `url('assets/images/backgrounds/${Math.floor(Math.random() * backgroundimageLength)}.jpg')`
     }, 60000)
 }
 
@@ -96,7 +96,7 @@ async function showMainUI(data) {
         // If this is enabled in a development environment we'll get ratelimited.
         // The relaunch frequency is usually far too high.
         if(!isDev && isLoggedIn){
-            validateSelectedAccount()
+            await validateSelectedAccount()
         }
 
         const { nextServerOpeningDate, currentServerClosingDate } = await fetchServerDates()
@@ -164,8 +164,7 @@ function showFatalStartupError(){
                 'Fermer'
             )
             setOverlayHandler(() => {
-                const window = remote.getCurrentWindow()
-                window.close()
+                ipcRenderer.send('window:close')
             })
             toggleOverlay(true)
         })
@@ -371,36 +370,44 @@ function mergeModConfiguration(o, n, nReq = false){
 async function validateSelectedAccount(){
     const selectedAcc = ConfigManager.getSelectedAccount()
     if(selectedAcc != null){
-        const val = await AuthManager.validateSelected()
+        let val
+        try {
+            val = await AuthManager.validateSelected()
+        } catch(err) {
+            // Temporary failure (no connection, Microsoft unavailable...): keep the account.
+            loggerUICore.warn('Unable to validate the selected account, keeping it.', err)
+            setOverlayContent(
+                'Vérification de la connexion impossible',
+                `Nous n'avons pas pu vérifier la connexion de <strong>${escapeHTML(selectedAcc.displayName)}</strong>. Votre compte a été conservé : vérifiez votre connexion internet puis réessayez.`,
+                'OK'
+            )
+            setOverlayHandler(null)
+            toggleOverlay(true)
+            return false
+        }
         if(!val){
             ConfigManager.removeAuthAccount(selectedAcc.uuid)
             ConfigManager.save()
             const accLen = Object.keys(ConfigManager.getAuthAccounts()).length
+            const isMicrosoft = selectedAcc.type === 'microsoft'
+            const displayName = escapeHTML(selectedAcc.displayName)
             setOverlayContent(
                 'Échec de l\'actualisation de la connexion',
-                `Nous n'avons pas pu actualiser la connexion pour <strong>${selectedAcc.displayName}</strong>. Veuillez ${accLen > 0 ? 'sélectionnez un autre compte ou ' : ''} vous reconnecter.`,
+                isMicrosoft
+                    ? `Nous n'avons pas pu actualiser la connexion pour <strong>${displayName}</strong>. Veuillez ${accLen > 0 ? 'sélectionner un autre compte ou ' : ''}vous reconnecter.`
+                    // Mojang accounts can no longer be used since the service was closed.
+                    : `Les comptes Mojang ne sont plus pris en charge, le compte <strong>${displayName}</strong> a été retiré. Veuillez ${accLen > 0 ? 'sélectionner un autre compte ou ' : ''}vous connecter avec Microsoft.`,
                 'Connexion',
                 'Sélectionnez un autre compte'
             )
             setOverlayHandler(() => {
-
-                const isMicrosoft = selectedAcc.type === 'microsoft'
-
-                if(isMicrosoft) {
-                    // Empty for now
-                } else {
-                    // Mojang
-                    // For convenience, pre-populate the username of the account.
-                    document.getElementById('loginUsername').value = selectedAcc.username
-                    validateEmail(selectedAcc.username)
-                }
-                        
                 loginOptionsViewOnLoginSuccess = getCurrentView()
                 loginOptionsViewOnLoginCancel = VIEWS.loginOptions
 
                 if(accLen > 0) {
                     loginOptionsViewOnCancel = getCurrentView()
                     loginOptionsViewCancelHandler = () => {
+                        // Only a Microsoft account can be restored.
                         if(isMicrosoft) {
                             ConfigManager.addMicrosoftAuthAccount(
                                 selectedAcc.uuid,
@@ -411,10 +418,8 @@ async function validateSelectedAccount(){
                                 selectedAcc.microsoft.refresh_token,
                                 selectedAcc.microsoft.expires_at
                             )
-                        } else {
-                            ConfigManager.addMojangAuthAccount(selectedAcc.uuid, selectedAcc.accessToken, selectedAcc.username, selectedAcc.displayName)
+                            ConfigManager.save()
                         }
-                        ConfigManager.save()
                         validateSelectedAccount()
                     }
                     loginOptionsCancelEnabled(true)

@@ -1,29 +1,36 @@
 name: Build
 
-on: push
+# Checks that the launcher builds on every branch push. Nothing is published
+# here: releases are made by release.yml, on version tags only.
+on:
+  push:
+    branches: ['**']
+
+permissions:
+  contents: read
 
 jobs:
-  release:
+  build:
     runs-on: ${{ matrix.os }}
-
-    permissions:
-      contents: write
 
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
 
     steps:
+      # Actions are pinned to a commit SHA (a tag can be moved).
       - name: Check out Git repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
 
       - name: Set up Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 24
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: 3.x
 
@@ -32,7 +39,5 @@ jobs:
         shell: bash
 
       - name: Build
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run dist
+        run: npm run dist -- --publish never
         shell: bash

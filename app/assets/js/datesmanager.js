@@ -22,6 +22,8 @@ exports.fetchServerDates = async () => {
         return data
     } catch (err) {
         console.error('Error while trying to fetch server dates', err)
+        // Callers destructure the result: never return undefined.
+        return {}
     }
 }
 
@@ -46,6 +48,6 @@ exports.fetchAuthorizedAccounts = async () => {
 
         return data
     } catch (err) {
-        console.error('Error while trying to fetch server dates', err)
+        console.error('Error while trying to fetch authorized accounts', err)
     }
 }

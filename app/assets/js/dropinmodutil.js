@@ -1,6 +1,6 @@
 const fs        = require('fs-extra')
 const path      = require('path')
-const { ipcRenderer, shell } = require('electron')
+const { ipcRenderer, shell, webUtils } = require('electron')
 const { SHELL_OPCODE } = require('./ipcconstants')
 
 // Group #1: File Name (without .disabled, if any)
@@ -81,7 +81,8 @@ exports.addDropinMods = function(files, modsdir) {
 
     for(let f of files) {
         if(MOD_REGEX.exec(f.name) != null) {
-            fs.moveSync(f.path, path.join(modsdir, f.name))
+            // File.path was removed in Electron 32, webUtils replaces it.
+            fs.moveSync(webUtils.getPathForFile(f), path.join(modsdir, f.name))
         }
     }
 
@@ -210,7 +211,10 @@ exports.setEnabledShaderpack = function(instanceDir, pack){
     let buf
     if(fs.existsSync(optionsShaders)){
         buf = fs.readFileSync(optionsShaders, {encoding: 'utf-8'})
-        buf = buf.replace(SHADER_OPTION, `shaderPack=${pack}`)
+        // Replacer function: a pack name containing "$" is written as is.
+        buf = SHADER_OPTION.test(buf)
+            ? buf.replace(SHADER_OPTION, () => `shaderPack=${pack}`)
+            : `${buf}${buf === '' || buf.endsWith('\n') ? '' : '\n'}shaderPack=${pack}`
     } else {
         buf = `shaderPack=${pack}`
     }
@@ -231,7 +235,7 @@ exports.addShaderpacks = function(files, instanceDir) {
 
     for(let f of files) {
         if(SHADER_REGEX.exec(f.name) != null) {
-            fs.moveSync(f.path, path.join(p, f.name))
+            fs.moveSync(webUtils.getPathForFile(f), path.join(p, f.name))
         }
     }
 

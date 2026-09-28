@@ -4,3 +4,7 @@
 /target/
 /logs/
 /dist/
+/.env
+/.env.*
+*.pem
+/code.zip

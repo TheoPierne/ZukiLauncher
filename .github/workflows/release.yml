@@ -1,0 +1,68 @@
+name: Release
+
+# Builds and uploads the installers to a draft GitHub release when a version
+# tag (vX.Y.Z) is pushed. The draft must then be published by hand: players
+# only receive the update once it is published.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+
+    # Required reviewers can be added to this environment in the repository
+    # settings to approve each release before it is uploaded.
+    environment: release
+
+    permissions:
+      contents: write
+
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
+    steps:
+      # Actions are pinned to a commit SHA (a tag can be moved).
+      - name: Check out Git repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 24
+
+      - name: Check that the tag matches package.json
+        run: |
+          expected="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$expected" ]; then
+            echo "Le tag $GITHUB_REF_NAME ne correspond pas à la version de package.json ($expected)." >&2
+            exit 1
+          fi
+        shell: bash
+
+      # The launcher refuses a distribution.json that is not signed with a key
+      # of app/assets/js/distributionkeys.json: never release in that state.
+      - name: Check that the online distribution is signed
+        run: npm run distribution:verify
+        shell: bash
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: 3.x
+
+      - name: Install Dependencies
+        run: npm ci
+        shell: bash
+
+      - name: Build and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run dist -- --publish always
+        shell: bash

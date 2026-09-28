@@ -90,7 +90,7 @@ class ProcessBuilder {
 
             const updatedPacks = Array.from(new Set([...currentPacks, ...resourcePacks]))
 
-            optionsLines[resourcePacksLineIndex] = `resourcePacks:[${updatedPacks.map(pack => `"${pack}"`).join(',')}]`
+            optionsLines[resourcePacksLineIndex] = `resourcePacks:${JSON.stringify(updatedPacks)}`
 
             fs.writeFileSync(optionsFilePath, optionsLines.join('\n'), 'utf-8')
 
@@ -105,8 +105,7 @@ class ProcessBuilder {
     */
     build() {
         fs.ensureDirSync(this.gameDir)
-        const tempNativePath = path.join(os.tmpdir(), ConfigManager.getTempNativeFolder(), crypto.pseudoRandomBytes(16).toString('hex'))
-        process.throwDeprecation = true
+        const tempNativePath = path.join(os.tmpdir(), ConfigManager.getTempNativeFolder(), crypto.randomBytes(16).toString('hex'))
         this.setupLiteLoader()
         logger.info('Using liteloader:', this.usingLiteLoader)
         this.usingFabricLoader = this.server.modules.some(mdl => mdl.rawModule.type === Type.Fabric)
@@ -152,7 +151,8 @@ class ProcessBuilder {
             logger.info(`Game launch with diff: \n\n- mods: ${mods}\n- resourcePacks: ${resourcePacks}`)
         }
 
-        logger.info('Launch Arguments:', args)
+        // Never log the Minecraft access token.
+        logger.info('Launch Arguments:', args.map(arg => arg === this.authUser.accessToken ? '**********' : arg))
 
         const child = child_process.spawn(ConfigManager.getJavaExecutable(this.server.rawServer.id), args, {
             cwd: this.gameDir,
@@ -338,7 +338,7 @@ class ProcessBuilder {
                     return true
                 }
             }
-        } catch (err) {
+        } catch {
             // We know old forge versions follow this format.
             // Error must be caused by newer version.
         }
@@ -841,11 +841,11 @@ class ProcessBuilder {
                                     continue
                                 }
 
-                                fs.outputFile(path.join(tempNativePath, fileName), zipEntries[i].getData(), (err) => {
-                                    if (err) {
-                                        logger.error('Error while extracting native library:', err)
-                                    }
-                                })
+                                try {
+                                    fs.outputFileSync(path.join(tempNativePath, fileName), zipEntries[i].getData())
+                                } catch (err) {
+                                    logger.error('Error while extracting native library:', err)
+                                }
                             } else {
                                 logger.error(`${fileName} includes '..' that can cause path traversal. (see: https://cwe.mitre.org/data/definitions/22.html)`)
                             }
@@ -893,11 +893,11 @@ class ProcessBuilder {
                         // Extract the file.
                         if (!shouldExclude) {
                             if (!fileName.includes('..')) {
-                                fs.writeFile(path.join(tempNativePath, extractName), zipEntries[i].getData(), (err) => {
-                                    if (err) {
-                                        logger.error('Error while extracting native library:', err)
-                                    }
-                                })
+                                try {
+                                    fs.writeFileSync(path.join(tempNativePath, extractName), zipEntries[i].getData())
+                                } catch (err) {
+                                    logger.error('Error while extracting native library:', err)
+                                }
                             } else {
                                 logger.error(`${fileName} includes '..' that can cause path traversal. (see: https://cwe.mitre.org/data/definitions/22.html)`)
                             }
@@ -943,7 +943,7 @@ class ProcessBuilder {
 
         //Check for any libraries in our mod list.
         for (let i = 0; i < mods.length; i++) {
-            if (mods.sub_modules != null) {
+            if (mods[i].subModules.length > 0) {
                 const res = this._resolveModuleLibraries(mods[i])
                 libs = { ...libs, ...res }
             }
@@ -959,7 +959,7 @@ class ProcessBuilder {
     * @returns {Array<string>} An array containing the paths of each library this module requires.
     */
     _resolveModuleLibraries(mdl) {
-        if (!mdl.subModules.length > 0) {
+        if (mdl.subModules.length === 0) {
             return {}
         }
         let libs = {}
