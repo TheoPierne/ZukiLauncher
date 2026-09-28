@@ -8,9 +8,9 @@ asar: true
 compression: 'maximum'
 
 # Everything in the project folder is packaged unless excluded here: never ship
-# local secrets (.env) or archives.
+# local secrets (.env, keys), archives or the maintainer scripts.
 files:
-  - '!{dist,.gitignore,.vscode,docs,dev-app-update.yml,.nvmrc,.eslintrc.json,.env,.env.*,*.zip,eslint.config.*}'
+  - '!{dist,.gitignore,.vscode,docs,scripts,dev-app-update.yml,.nvmrc,.eslintrc.json,.env,.env.*,*.zip,*.pem,eslint.config.*}'
 
 extraResources:
   - 'libraries'

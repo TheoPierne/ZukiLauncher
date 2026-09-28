@@ -46,6 +46,12 @@ jobs:
           fi
         shell: bash
 
+      # The launcher refuses a distribution.json that is not signed with a key
+      # of app/assets/js/distributionkeys.json: never release in that state.
+      - name: Check that the online distribution is signed
+        run: npm run distribution:verify
+        shell: bash
+
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:

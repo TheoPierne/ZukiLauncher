@@ -3,15 +3,38 @@ const path = require('node:path')
 const fs = require('node:fs')
 
 const { LoggerUtil } = require('helios-core')
-const { DistributionAPI } = require('helios-core/common')
+const { DistributionAPI, RestResponseStatus } = require('helios-core/common')
 
 const ConfigManager = require('./configmanager')
+const DistributionSignature = require('./distributionsignature')
 
 const logger = LoggerUtil.getLogger('DistroManager')
 
 exports.REMOTE_DISTRO_URL = 'https://zukipalace.theopierne.fr/zuki-launcher/distribution.json'
 
-const api = new DistributionAPI(
+/**
+ * Only accepts a remote distribution index signed with a trusted key (see
+ * distributionsignature.js). When the download or the check fails, helios-core
+ * falls back to the copy saved on disk by the last successful load.
+ */
+class SignedDistributionAPI extends DistributionAPI {
+    async pullRemote() {
+        try {
+            return {
+                data: await DistributionSignature.pullSignedDistribution(this.remoteUrl),
+                responseStatus: RestResponseStatus.SUCCESS
+            }
+        } catch (err) {
+            logger.error('Remote distribution rejected, falling back to the local copy.', err)
+            return {
+                data: null,
+                responseStatus: RestResponseStatus.ERROR
+            }
+        }
+    }
+}
+
+const api = new SignedDistributionAPI(
     ConfigManager.getLauncherDirectory(),
     null, // Injected forcefully by the preloader.
     null, // Injected forcefully by the preloader.

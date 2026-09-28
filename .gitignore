@@ -6,4 +6,5 @@
 /dist/
 /.env
 /.env.*
+*.pem
 /code.zip

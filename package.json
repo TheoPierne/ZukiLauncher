@@ -17,6 +17,9 @@
     "dist:win": "npm run dist -- -w",
     "dist:mac": "npm run dist -- -m",
     "dist:linux": "npm run dist -- -l",
+    "distribution:keygen": "node scripts/distribution-signing.js keygen",
+    "distribution:sign": "node scripts/distribution-signing.js sign",
+    "distribution:verify": "node scripts/distribution-signing.js verify https://zukipalace.theopierne.fr/zuki-launcher/distribution.json",
     "lint": "eslint --config eslint.config.mjs ."
   },
   "engines": {
