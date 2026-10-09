@@ -13,6 +13,8 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
+    "bench": "electron . --bench",
+    "bench:report": "node scripts/bench-report.js",
     "dist": "electron-builder build",
     "dist:win": "npm run dist -- -w",
     "dist:mac": "npm run dist -- -m",

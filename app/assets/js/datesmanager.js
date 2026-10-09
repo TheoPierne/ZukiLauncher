@@ -1,5 +1,9 @@
 'use strict'
 
+// The first view is chosen with these files (see showMainUI in uibinder.js):
+// past this delay, the launcher continues with the default values.
+const REQUEST_TIMEOUT = 10000
+
 exports.fetchServerDates = async () => {
     const DATES_URL = 'https://zukipalace.theopierne.fr/dates.json'
 
@@ -8,7 +12,7 @@ exports.fetchServerDates = async () => {
             return JSON.parse(sessionStorage.getItem('nextServerData')) || {}
         }
 
-        const response = await fetch(DATES_URL, { cache: 'no-store' })
+        const response = await fetch(DATES_URL, { cache: 'no-store', signal: AbortSignal.timeout(REQUEST_TIMEOUT) })
         if (!response.ok) {
             throw new Error(`Erreur HTTP ${response.status} : ${response.statusText}`)
         }
@@ -35,7 +39,7 @@ exports.fetchAuthorizedAccounts = async () => {
             return JSON.parse(sessionStorage.getItem('authorizeToBypassWaitingScreen')) || {}
         }
 
-        const response = await fetch(AUTHORIZED_URL, { cache: 'no-store' })
+        const response = await fetch(AUTHORIZED_URL, { cache: 'no-store', signal: AbortSignal.timeout(REQUEST_TIMEOUT) })
         if (!response.ok) {
             throw new Error(`Erreur HTTP ${response.status} : ${response.statusText}`)
         }

@@ -18,6 +18,11 @@ ipcRenderer.send('onCloseAction', 'closeAction', ConfigManager.getCloseAction())
 let rscShouldLoad = false
 let fatalStartupError = false
 
+// Started as soon as the page loads, in parallel with the distribution index
+// download: showMainUI needs them to choose the first view. Never rejected.
+const serverDatesRequest = fetchServerDates()
+const authorizedAccountsRequest = fetchAuthorizedAccounts()
+
 // Mapping of each view to their container IDs.
 const VIEWS = {
     landing: '#landingContainer',
@@ -46,6 +51,7 @@ let currentView
 */
 function switchView(current, next, currentFadeTime = 500, nextFadeTime = 500, onCurrentFade = () => {}, onNextFade = () => {}){    
     currentView = next
+    benchPhase(benchViewPhase(next))
     $(`${current}`).fadeOut(currentFadeTime, async () => {
         await onCurrentFade()
         $(`${next}`).fadeIn(nextFadeTime, async () => {
@@ -75,6 +81,7 @@ function changeBackgroundImage(){
 }
 
 async function showMainUI(data) {
+    benchMark('affichage-debut')
 
     if(!isDev){
         loggerAutoUpdater.info('Initializing..')
@@ -86,75 +93,78 @@ async function showMainUI(data) {
     await prepareSettings(true)
     updateSelectedServer(selectedServer)
     refreshServerStatus()
-    setTimeout(async () => {
-        document.getElementById('frameBar').style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
-        changeBackgroundImage()
-        $('#main').show()
-
-        const isLoggedIn = Object.keys(ConfigManager.getAuthAccounts()).length > 0
-
-        // If this is enabled in a development environment we'll get ratelimited.
-        // The relaunch frequency is usually far too high.
-        if(!isDev && isLoggedIn){
-            await validateSelectedAccount()
-        }
-
-        const { nextServerOpeningDate, currentServerClosingDate } = await fetchServerDates()
-        let authorizedAccounts = await fetchAuthorizedAccounts()
-
-        const currentServerEndingDate = new Date(currentServerClosingDate).getTime()
-        const nextServerOpeningDateTimestamp = new Date(nextServerOpeningDate).getTime()
-
-        if (!authorizedAccounts || (Array.isArray(authorizedAccounts) && authorizedAccounts.length === 0)) {
-            authorizedAccounts = [
-                '97a96519e2d14b4ebcf7c26026e719bb', // Wouhait
-                'e60aa86ee9074cc094274d88539a8862', // Zukirya
-                'ea1d90a86f4548c5abf21c3d65ae5543' // TimBV_
-            ]
-        }
-
-        if (
-            (
-                (
-                    Date.now() > currentServerEndingDate &&
-                    (isNaN(nextServerOpeningDateTimestamp) || nextServerOpeningDateTimestamp - Date.now() >= 0)
-                ) ||
-                ['alpha', 'beta', 'dev'].some(e => selectedServer.rawServer.version.includes(e))
-            ) &&
-            !authorizedAccounts.includes(ConfigManager.getSelectedAccount()?.uuid)
-        ) {
-            currentView = VIEWS.waitingNextServer
-            $(VIEWS.waitingNextServer).fadeIn(1000)
-        } else if (ConfigManager.isFirstLaunch()) {
-            currentView = VIEWS.welcome
-            $(VIEWS.welcome).fadeIn(1000)
-        } else {
-            if(isLoggedIn){
-                currentView = VIEWS.landing
-                $(VIEWS.landing).fadeIn(1000)
-            } else {
-                loginOptionsCancelEnabled(false)
-                loginOptionsViewOnLoginSuccess = VIEWS.landing
-                loginOptionsViewOnLoginCancel = VIEWS.loginOptions
-                currentView = VIEWS.loginOptions
-                $(VIEWS.loginOptions).fadeIn(1000)
-            }
-        }
-
-        setTimeout(() => {
-            $('#loadingContainer').fadeOut(500, () => {
-                $('#loadSpinnerImage').removeClass('rotating')
-            })
-        }, 250)
-        
-    }, 750)
     // Disable tabbing to the news container.
     initNews().then(() => {
         $('#newsContainer *').attr('tabindex', '-1')
     })
+
+    document.getElementById('frameBar').style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
+    changeBackgroundImage()
+    $('#main').show()
+
+    const isLoggedIn = Object.keys(ConfigManager.getAuthAccounts()).length > 0
+
+    // If this is enabled in a development environment we'll get ratelimited.
+    // The relaunch frequency is usually far too high.
+    if(!isDev && isLoggedIn){
+        await validateSelectedAccount()
+    }
+
+    const [{ nextServerOpeningDate, currentServerClosingDate }, fetchedAuthorizedAccounts] = await Promise.all([
+        serverDatesRequest,
+        authorizedAccountsRequest
+    ])
+    let authorizedAccounts = fetchedAuthorizedAccounts
+
+    const currentServerEndingDate = new Date(currentServerClosingDate).getTime()
+    const nextServerOpeningDateTimestamp = new Date(nextServerOpeningDate).getTime()
+
+    if (!authorizedAccounts || (Array.isArray(authorizedAccounts) && authorizedAccounts.length === 0)) {
+        authorizedAccounts = [
+            '97a96519e2d14b4ebcf7c26026e719bb', // Wouhait
+            'e60aa86ee9074cc094274d88539a8862', // Zukirya
+            'ea1d90a86f4548c5abf21c3d65ae5543' // TimBV_
+        ]
+    }
+
+    if (
+        (
+            (
+                Date.now() > currentServerEndingDate &&
+                (isNaN(nextServerOpeningDateTimestamp) || nextServerOpeningDateTimestamp - Date.now() >= 0)
+            ) ||
+            ['alpha', 'beta', 'dev'].some(e => selectedServer.rawServer.version.includes(e))
+        ) &&
+        !authorizedAccounts.includes(ConfigManager.getSelectedAccount()?.uuid)
+    ) {
+        currentView = VIEWS.waitingNextServer
+        $(VIEWS.waitingNextServer).fadeIn(500)
+    } else if (ConfigManager.isFirstLaunch()) {
+        currentView = VIEWS.welcome
+        $(VIEWS.welcome).fadeIn(500)
+    } else {
+        if(isLoggedIn){
+            currentView = VIEWS.landing
+            $(VIEWS.landing).fadeIn(500)
+        } else {
+            loginOptionsCancelEnabled(false)
+            loginOptionsViewOnLoginSuccess = VIEWS.landing
+            loginOptionsViewOnLoginCancel = VIEWS.loginOptions
+            currentView = VIEWS.loginOptions
+            $(VIEWS.loginOptions).fadeIn(500)
+        }
+    }
+
+    // The loading screen fades out while the first view fades in.
+    $('#loadingContainer').fadeOut(400, () => {
+        $('#loadSpinnerImage').removeClass('rotating')
+        benchMark('interface-prete')
+        benchPhase(benchViewPhase(currentView))
+    })
 }
 
 function showFatalStartupError(){
+    benchMark('erreur-demarrage')
     setTimeout(() => {
         $('#loadingContainer').fadeOut(250, () => {
             document.getElementById('overlayContainer').style.background = 'none'
