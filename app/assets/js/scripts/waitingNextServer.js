@@ -14,7 +14,7 @@
         waitingTitle,
         waitingDescription,
         waitingEndDescription
-    } = await fetchServerDates()
+    } = await serverDatesRequest // Started by uibinder.js.
 
     // Keep the default texts from waitingNextServer.ejs when dates.json is unavailable.
     if (waitingTitle) waitingTitleEl.innerText = waitingTitle

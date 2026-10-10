@@ -41,3 +41,10 @@ exports.getVersion = function() {
 exports.getUserDataPath = function() {
     return runtime?.paths?.userData ?? null
 }
+
+/**
+ * @returns {boolean} True if the launcher was started with --bench (see benchmark.js).
+ */
+exports.isBenchmarkEnabled = function() {
+    return runtime?.benchmark === true
+}

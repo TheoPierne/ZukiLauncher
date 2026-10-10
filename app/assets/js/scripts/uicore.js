@@ -19,6 +19,29 @@ function copy(value) {
     clipboard.writeText(value, 'selection')
 }
 
+// Benchmark (npm run bench): steps and phases recorded by benchmark.js.
+const benchEnabled = LauncherRuntime.isBenchmarkEnabled()
+
+function benchMark(name) {
+    if (benchEnabled) {
+        ipcRenderer.send('bench:mark', name)
+    }
+}
+
+function benchPhase(name) {
+    if (benchEnabled) {
+        ipcRenderer.send('bench:phase', name)
+    }
+}
+
+/**
+ * @param {string} view A view container ID (see VIEWS in uibinder.js).
+ * @returns {string} The benchmark phase of this view, e.g. 'vue:landing'.
+ */
+function benchViewPhase(view) {
+    return `vue:${String(view ?? 'inconnue').replace(/^#/, '').replace(/Container$/, '')}`
+}
+
 // Log deprecation and process warnings.
 process.traceProcessWarnings = true
 process.traceDeprecation = true

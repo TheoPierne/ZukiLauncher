@@ -120,6 +120,7 @@ document.getElementById('launch_button').addEventListener('click', async () => {
     }
 
     loggerLanding.info('Launching game..')
+    benchPhase('jeu:preparation')
     try {
         const server = (await DistroAPI.getDistribution()).getServerById(ConfigManager.getSelectedServer())
         const jExe = ConfigManager.getJavaExecutable(ConfigManager.getSelectedServer())
@@ -306,6 +307,7 @@ function showLaunchFailure(title, desc) {
     setOverlayHandler(null)
     toggleOverlay(true)
     toggleLaunchArea(false)
+    benchPhase(benchViewPhase(getCurrentView()))
 }
 
 /* System (Java) Scan */
@@ -360,6 +362,7 @@ async function asyncSystemScan(effectiveJavaOptions, launchAfter = true) {
                 setOverlayHandler(() => {
                     toggleLaunchArea(false)
                     toggleOverlay(false)
+                    benchPhase(benchViewPhase(getCurrentView()))
                 })
                 setDismissHandler(() => {
                     toggleOverlay(false, true)
@@ -590,6 +593,7 @@ async function dlAsync(login = true) {
         const SERVER_JOINED_REGEX = new RegExp(`Connecting to ${serv.hostname}, ${serv.port}`)
 
         const onLoadComplete = () => {
+            benchPhase('jeu:en-cours')
             toggleLaunchArea(false)
             isGameLaunch = true
             setLaunchEnabled(!isGameLaunch)
@@ -638,6 +642,7 @@ async function dlAsync(login = true) {
         try {
             // Build Minecraft process.
             proc = pb.build()
+            benchPhase('jeu:chargement')
 
             // Keep the launcher running (hidden in the tray if its window is
             // closed) while the game runs.
@@ -651,6 +656,7 @@ async function dlAsync(login = true) {
                 changeCloseAction('gameLaunch', false)
             })
             proc.on('close', (code) => {
+                benchPhase(benchViewPhase(getCurrentView()))
                 isGameLaunch = false
                 setLaunchEnabled(!isGameLaunch)
                 changeCloseAction('gameLaunch', false)

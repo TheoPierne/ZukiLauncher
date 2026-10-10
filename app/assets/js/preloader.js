@@ -26,7 +26,22 @@ DistroAPI['instanceDir'] = ConfigManager.getInstanceDirectory()
 LangLoader.loadLanguage('fr_FR')
 
 /**
- * @param {HeliosDistribution} data 
+ * Run the callback once the page scripts are loaded. uibinder.js listens for
+ * distributionIndexDone: an event sent before its listener is added is lost,
+ * and the launcher would stay on the loading screen.
+ *
+ * @param {() => void} callback
+ */
+function onPageScriptsLoaded(callback) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', callback, { once: true })
+    } else {
+        callback()
+    }
+}
+
+/**
+ * @param {HeliosDistribution} data
  */
 function onDistroLoad(data) {
     if (data != null) {
@@ -38,7 +53,9 @@ function onDistroLoad(data) {
             ConfigManager.save()
         }
     }
-    ipcRenderer.send('distributionIndexDone', data != null)
+    onPageScriptsLoaded(() => {
+        ipcRenderer.send('distributionIndexDone', data != null)
+    })
 }
 
 DistroAPI.getDistribution()

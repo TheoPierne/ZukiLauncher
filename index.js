@@ -24,6 +24,7 @@ const {
     MSFT_ERROR
 } = require('./app/assets/js/ipcconstants')
 const { setupIpcHandlers } = require('./ipc')
+const Benchmark = require('./benchmark')
 
 let minimizeOnClose = false
 let isGameLaunch = false
@@ -119,6 +120,7 @@ ipcMain.on('autoUpdateAction', (event, arg, data) => {
 })
 // Redirect distribution index event from preloader to renderer.
 ipcMain.on('distributionIndexDone', (event, res) => {
+    Benchmark.mark(res ? 'distribution-chargee' : 'distribution-echec')
     event.sender.send('distributionIndexDone', res)
 })
 
@@ -133,9 +135,26 @@ ipcMain.on('onCloseAction', (event, arg, res) => {
     }
 })
 
-// Disable hardware acceleration.
-// https://electronjs.org/docs/tutorial/offscreen-rendering
-app.disableHardwareAcceleration()
+/**
+ * Hardware acceleration can be turned off in the launcher settings, for the
+ * PCs whose graphics driver displays the launcher badly. Read from config.json
+ * because it can only be changed before app ready.
+ *
+ * @returns {boolean} True if the player turned hardware acceleration off.
+ */
+function isHardwareAccelerationDisabled() {
+    try {
+        const config = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'config.json'), 'utf-8'))
+        return config?.settings?.launcher?.hardwareAcceleration === false
+    } catch {
+        // No config yet (first launch) or malformed config: keep the default.
+        return false
+    }
+}
+
+if (isHardwareAccelerationDisabled()) {
+    app.disableHardwareAcceleration()
+}
 
 const REDIRECT_URI = 'https://login.microsoftonline.com/common/oauth2/nativeclient'
 const REDIRECT_URI_PREFIX = REDIRECT_URI + '?'
@@ -411,6 +430,7 @@ function createWindow() {
                     platform: process.platform,
                     arch: process.arch,
                     isDev,
+                    benchmark: Benchmark.isEnabled(),
                     appRoot: path.join(__dirname, 'app'),
                     paths: {
                         userData: app.getPath('userData'),
@@ -422,6 +442,10 @@ function createWindow() {
             ]
         },
         backgroundColor: '#171614'
+    })
+    Benchmark.mark('fenetre-creee')
+    win.webContents.once('did-finish-load', () => {
+        Benchmark.mark('page-chargee')
     })
 
     ejse.data('bkid', Math.floor((Math.random() * fs.readdirSync(path.join(__dirname, 'app', 'assets', 'images', 'backgrounds')).length)))
@@ -557,6 +581,9 @@ const gotSingleInstanceLock = app.requestSingleInstanceLock()
 if (!gotSingleInstanceLock) {
     app.quit()
 } else {
+    // Before app ready, to record the startup steps.
+    Benchmark.start()
+
     app.on('second-instance', () => {
         if (!app.isReady()) {
             return

@@ -92,7 +92,8 @@ const DEFAULT_CONFIG = {
         launcher: {
             allowPrerelease: false,
             dataDirectory: dataPath,
-            onCloseMinimize: false
+            onCloseMinimize: false,
+            hardwareAcceleration: true
         }
     },
     newsCache: {
@@ -890,4 +891,24 @@ exports.getCloseAction = function(def = false){
  */
 exports.setCloseAction = function(closeAction){
     config.settings.launcher.onCloseMinimize = closeAction
+}
+
+/**
+ * Check if the launcher uses hardware acceleration. Read by the main process
+ * at startup (see index.js), a change applies on the next launch.
+ *
+ * @param {boolean} def Optional. If true, the default value will be returned.
+ * @returns {boolean} Whether or not the launcher uses hardware acceleration.
+ */
+exports.getHardwareAcceleration = function(def = false){
+    return !def ? config.settings.launcher.hardwareAcceleration : DEFAULT_CONFIG.settings.launcher.hardwareAcceleration
+}
+
+/**
+ * Change whether or not the launcher uses hardware acceleration.
+ *
+ * @param {boolean} hardwareAcceleration Whether or not the launcher uses hardware acceleration.
+ */
+exports.setHardwareAcceleration = function(hardwareAcceleration){
+    config.settings.launcher.hardwareAcceleration = hardwareAcceleration
 }

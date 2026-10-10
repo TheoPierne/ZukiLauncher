@@ -12,7 +12,7 @@ const path = require('path')
 const isDev = require('./isdev')
 
 const ConfigManager = require('./configmanager')
-const DiscordWebhook = require('./discordwebhook')
+const ZukiAdmin = require('./zukiadmin')
 
 const logger = LoggerUtil.getLogger('ProcessBuilder')
 
@@ -141,15 +141,12 @@ class ProcessBuilder {
         ])
 
         const { mods, resourcePacks } = this.generateGameStartDataDiff()
-        if (!isDev) {
-            DiscordWebhook.sendGameStartingLogToDiscord(
-                `${this.authUser.displayName.trim()} (${this.authUser.uuid.trim()})`,
-                mods,
-                resourcePacks
-            ).catch(err => logger.error('An error occurred', err))
-        } else {
+        if (isDev) {
             logger.info(`Game launch with diff: \n\n- mods: ${mods}\n- resourcePacks: ${resourcePacks}`)
         }
+        // Not awaited: the game starts even when the backend does not answer.
+        ZukiAdmin.sendGameStartLog(this.authUser, { launcherVersion: this.launcherVersion, mods, resourcePacks })
+            .catch(err => logger.warn('Game start log not sent.', err))
 
         // Never log the Minecraft access token.
         logger.info('Launch Arguments:', args.map(arg => arg === this.authUser.accessToken ? '**********' : arg))
