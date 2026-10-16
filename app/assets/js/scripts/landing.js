@@ -18,6 +18,7 @@ const {
 // Internal Requirements
 const DiscordWrapper = require('./assets/js/discordwrapper')
 const ProcessBuilder = require('./assets/js/processbuilder')
+const ZukiAdmin = require('./assets/js/zukiadmin')
 
 // Launch Elements
 const launch_content = document.getElementById('launch_content')
@@ -310,6 +311,29 @@ function showLaunchFailure(title, desc) {
     benchPhase(benchViewPhase(getCurrentView()))
 }
 
+/**
+ * Message shown to a banned player (HTML: the reason is escaped).
+ *
+ * @param {{reason: string|null, expiresAt: string|null}} ban The ban returned
+ * by the backend. expiresAt is null for a permanent ban.
+ * @returns {string} The message.
+ */
+function banMessage({ reason, expiresAt }) {
+    let message
+    if (expiresAt == null) {
+        message = 'Vous êtes banni définitivement du serveur.'
+    } else if (Number.isNaN(Date.parse(expiresAt))) {
+        message = 'Vous êtes banni du serveur.'
+    } else {
+        const date = new Date(expiresAt).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })
+        message = `Vous êtes banni du serveur jusqu'au ${date}.`
+    }
+    if (reason) {
+        message += `<br><br>Motif : ${escapeHTML(reason)}`
+    }
+    return message
+}
+
 /* System (Java) Scan */
 
 
@@ -587,6 +611,21 @@ async function dlAsync(login = true) {
 
         loggerLaunchSuite.info(`Sending selected account (${authUser.displayName}) to ProcessBuilder.`)
         let pb = new ProcessBuilder(serv, versionData, modLoaderData, authUser, LauncherRuntime.getVersion())
+
+        // The game start log is sent before the launch: the backend refuses a
+        // banned player. Any other answer, error or delay lets the game start.
+        setLaunchDetails('Vérification du compte..')
+        const { mods, resourcePacks } = pb.generateGameStartDataDiff()
+        if (isDev) {
+            loggerLaunchSuite.info(`Game launch with diff: \n\n- mods: ${mods}\n- resourcePacks: ${resourcePacks}`)
+        }
+        const gameStart = await ZukiAdmin.checkGameStart(authUser, { launcherVersion: LauncherRuntime.getVersion(), mods, resourcePacks })
+        if (gameStart.banned) {
+            loggerLaunchSuite.warn('Launch refused: this player is banned.')
+            showLaunchFailure('Accès au serveur refusé', banMessage(gameStart))
+            return
+        }
+
         setLaunchDetails('Lancement du jeu..')
 
         // const SERVER_JOINED_REGEX = new RegExp(`\\[.+\\]: \\[CHAT\\] ${authUser.displayName} joined the game`)

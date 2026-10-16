@@ -9,10 +9,7 @@ const jwt = require('jsonwebtoken')
 const os = require('os')
 const path = require('path')
 
-const isDev = require('./isdev')
-
 const ConfigManager = require('./configmanager')
-const ZukiAdmin = require('./zukiadmin')
 
 const logger = LoggerUtil.getLogger('ProcessBuilder')
 
@@ -140,13 +137,8 @@ class ProcessBuilder {
             'ChristmasPack_1.21_v2.2.zip'
         ])
 
-        const { mods, resourcePacks } = this.generateGameStartDataDiff()
-        if (isDev) {
-            logger.info(`Game launch with diff: \n\n- mods: ${mods}\n- resourcePacks: ${resourcePacks}`)
-        }
-        // Not awaited: the game starts even when the backend does not answer.
-        ZukiAdmin.sendGameStartLog(this.authUser, { launcherVersion: this.launcherVersion, mods, resourcePacks })
-            .catch(err => logger.warn('Game start log not sent.', err))
+        // The game start log is sent by landing.js before build(): the backend
+        // may refuse a banned player.
 
         // Never log the Minecraft access token.
         logger.info('Launch Arguments:', args.map(arg => arg === this.authUser.accessToken ? '**********' : arg))
