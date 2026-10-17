@@ -612,6 +612,10 @@ async function dlAsync(login = true) {
         loggerLaunchSuite.info(`Sending selected account (${authUser.displayName}) to ProcessBuilder.`)
         let pb = new ProcessBuilder(serv, versionData, modLoaderData, authUser, LauncherRuntime.getVersion())
 
+        // Resource packs to enable, managed in ZukiAdmin, fetched during the
+        // check below. null: the built-in list of ProcessBuilder is used.
+        const resourcePackListRequest = ZukiAdmin.fetchResourcePacks()
+
         // The game start log is sent before the launch: the backend refuses a
         // banned player. Any other answer, error or delay lets the game start.
         setLaunchDetails('Vérification du compte..')
@@ -625,6 +629,7 @@ async function dlAsync(login = true) {
             showLaunchFailure('Accès au serveur refusé', banMessage(gameStart))
             return
         }
+        const resourcePackList = await resourcePackListRequest
 
         setLaunchDetails('Lancement du jeu..')
 
@@ -680,7 +685,7 @@ async function dlAsync(login = true) {
 
         try {
             // Build Minecraft process.
-            proc = pb.build()
+            proc = pb.build(resourcePackList ?? undefined)
             benchPhase('jeu:chargement')
 
             // Keep the launcher running (hidden in the tray if its window is

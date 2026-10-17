@@ -29,9 +29,17 @@ const logger = LoggerUtil.getLogger('ZukiAdmin')
 const API_URL = isDev ? process.env.ZUKI_ADMIN_URL ?? null : 'https://zukipalace.theopierne.fr/api'
 const MOJANG_JOIN_URL = 'https://sessionserver.mojang.com/session/minecraft/join'
 
+// Public, like dates.json: no token.
+const RESOURCE_PACKS_URL = 'https://zukipalace.theopierne.fr/resource_packs.json'
+
 const TIMEOUT = 10000
 // After this delay, the game starts without waiting for the backend.
 const GAME_START_DEADLINE = 8000
+// After this delay, the game starts with the built-in list of resource packs.
+const RESOURCE_PACKS_DEADLINE = 5000
+// Limits of the resource packs list served by the backend.
+const MAX_RESOURCE_PACKS = 50
+const MAX_RESOURCE_PACK_LENGTH = 255
 const MAX_RESPONSE_SIZE = 64 * 1024
 // Limits accepted by the backend.
 const MAX_LIST_LENGTH = 200
@@ -273,6 +281,53 @@ exports.createClient = function({ apiUrl, joinUrl = MOJANG_JOIN_URL, getHwid = g
     }
 
     return { authenticate, checkGameStart }
+}
+
+/**
+ * @param {any} list The resource packs list served by the backend.
+ * @returns {boolean} Whether it is an array of usable resource pack names.
+ */
+function isResourcePackList(list) {
+    return Array.isArray(list)
+        && list.length <= MAX_RESOURCE_PACKS
+        && list.every(name => typeof name === 'string'
+            && name.length > 0
+            && name.length <= MAX_RESOURCE_PACK_LENGTH
+            && !/[\u0000-\u001f\u007f]/.test(name))
+}
+
+/**
+ * Resource packs to enable in the game, managed in ZukiAdmin, in the order of
+ * ProcessBuilder.addResourcePacks: raw names (".zip" files without "file/",
+ * or mod identifiers such as "continuity:default"). Never throws.
+ *
+ * @param {Object} [options]
+ * @param {string} [options.url] The list URL.
+ * @param {number} [options.deadline] Delay after which the list is given up, in ms.
+ * @returns {Promise<string[]|null>} The list (empty: enable no pack), or null
+ * when it is unavailable or invalid: the built-in list is then used.
+ */
+exports.fetchResourcePacks = async function({ url = RESOURCE_PACKS_URL, deadline = RESOURCE_PACKS_DEADLINE } = {}) {
+    let timer
+    const timeout = new Promise(resolve => {
+        timer = setTimeout(resolve, deadline, null)
+    })
+    try {
+        const res = await Promise.race([requestJson('GET', url), timeout])
+        if (res == null) {
+            logger.warn('No resource packs list in time, the built-in list is used.')
+        } else if (res.status !== 200 || !isResourcePackList(res.data)) {
+            logger.warn(`Invalid resource packs list (HTTP ${res.status}), the built-in list is used.`)
+        } else {
+            logger.info(`Resource packs list received (${res.data.length}).`)
+            return res.data
+        }
+    } catch (err) {
+        logger.warn('Resource packs list unavailable, the built-in list is used.', err)
+    } finally {
+        clearTimeout(timer)
+    }
+    return null
 }
 
 const client = exports.createClient({ apiUrl: API_URL })

@@ -13,6 +13,19 @@ const ConfigManager = require('./configmanager')
 
 const logger = LoggerUtil.getLogger('ProcessBuilder')
 
+// Resource packs to enable when the list managed in ZukiAdmin is unavailable.
+// Mettre les resources packs dans l'ordre descendant de chargement
+// Ex: Le dernier resource pack de l'array chargera en premier
+const DEFAULT_RESOURCE_PACKS = [
+    'continuity:default',
+    'continuity:glass_pane_culling_fix',
+    'moonlight:mods_dynamic_assets',
+    '§cWearable Christmas Hats§0_§8[v2]§0.zip',
+    'Mizunos 16 Craft JE CIT_1.21.1-1.0_230720.zip',
+    'Invisible Item Frame Pack_1.21.1-1.0_230720.zip',
+    'ChristmasPack_1.21_v2.2.zip'
+]
+
 class ProcessBuilder {
 
     constructor(distroServer, vanillaManifest, modManifest, authUser, launcherVersion) {
@@ -99,8 +112,11 @@ class ProcessBuilder {
 
     /**
     * Convienence method to run the functions typically used to build a process.
+    *
+    * @param {string[]} resourcePacks The resource packs to enable (list managed
+    * in ZukiAdmin), the built-in list by default.
     */
-    build() {
+    build(resourcePacks = DEFAULT_RESOURCE_PACKS) {
         fs.ensureDirSync(this.gameDir)
         const tempNativePath = path.join(os.tmpdir(), ConfigManager.getTempNativeFolder(), crypto.randomBytes(16).toString('hex'))
         this.setupLiteLoader()
@@ -125,17 +141,8 @@ class ProcessBuilder {
             args = args.concat(this.constructModList(modObj.fMods))
         }
 
-        // Mettre les resources packs dans l'ordre descendant de chargement
-        // Ex: Le dernier resource pack de l'array chargera en premier
-        this.addResourcePacks([
-            'continuity:default',
-            'continuity:glass_pane_culling_fix',
-            'moonlight:mods_dynamic_assets',
-            '§cWearable Christmas Hats§0_§8[v2]§0.zip',
-            'Mizunos 16 Craft JE CIT_1.21.1-1.0_230720.zip',
-            'Invisible Item Frame Pack_1.21.1-1.0_230720.zip',
-            'ChristmasPack_1.21_v2.2.zip'
-        ])
+        // A copy: addResourcePacks adds the "file/" prefixes in place.
+        this.addResourcePacks([...resourcePacks])
 
         // The game start log is sent by landing.js before build(): the backend
         // may refuse a banned player.
